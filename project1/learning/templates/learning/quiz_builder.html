@@ -1,0 +1,161 @@
+{% extends 'mriic/base.html' %}
+{% load static %}
+{% block title %}Build Quiz | {{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0 fw-bold text-success">Quiz Builder – {{ lesson.title }}</h2>
+    <div>
+      <a href="{% url 'learning:lesson_detail' slug=lesson.slug %}" class="btn btn-outline-secondary btn-sm">Back to Lesson</a>
+    </div>
+  </div>
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <form method="post" id="quizForm" novalidate>
+        {% csrf_token %}
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <label class="form-label fw-semibold">Quiz Title</label>
+            <input type="text" name="quiz_title" class="form-control" value="{{ quiz.title|default:'Lesson Quiz' }}" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Eco Points</label>
+            <input type="number" name="quiz_points" class="form-control" value="{{ quiz.eco_points|default:100 }}" min="0" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Time (s)</label>
+            <input type="number" name="time_limit_seconds" class="form-control" value="{{ quiz.time_limit_seconds|default:'' }}" min="0" />
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="button" id="addQuestionBtn" class="btn btn-success w-100">Add Question</button>
+          </div>
+        </div>
+        <div id="questionsContainer"></div>
+        <input type="hidden" name="total_questions" id="totalQuestions" value="0" />
+        <hr />
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" class="btn btn-success px-4">Save Quiz</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="alert alert-info small">MCQ: mark one or more correct answers. True/False auto-generates two choices.</div>
+</div>
+<script>
+(function(){
+  let qIndex = 0;
+  const container = document.getElementById('questionsContainer');
+  const totalInput = document.getElementById('totalQuestions');
+  const existing = {{ existing_questions|safe }};
+
+  function renderExisting(){
+    if(!existing || !existing.length) return;
+    existing.forEach(q => {
+      addQuestion(q.type, q.text, q.choices);
+    });
+  }
+
+  function addQuestion(type='MCQ', text='', choicesData=null){
+    qIndex += 1;
+    totalInput.value = qIndex;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'border rounded p-3 mb-3 position-relative';
+    wrapper.dataset.q = qIndex;
+    wrapper.innerHTML = `
+      <div class="d-flex justify-content-between mb-2">
+        <h5 class="mb-0">Question #${qIndex}</h5>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-remove>Remove</button>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-md-8">
+          <textarea name="q${qIndex}_text" class="form-control" rows="2" placeholder="Question text" required>${text}</textarea>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small mb-1">Type</label>
+          <select name="q${qIndex}_type" class="form-select" data-qtype>
+            <option value="MCQ" ${type==='MCQ'?'selected':''}>Multiple Choice</option>
+            <option value="TF" ${type==='TF'?'selected':''}>True / False</option>
+          </select>
+        </div>
+      </div>
+      <div data-choices></div>
+      <div class="mt-2" data-actions></div>
+    `;
+    container.appendChild(wrapper);
+    const typeSelect = wrapper.querySelector('[data-qtype]');
+    const choicesDiv = wrapper.querySelector('[data-choices]');
+    const actionsDiv = wrapper.querySelector('[data-actions]');
+
+    function renderChoices(){
+      const currentType = typeSelect.value;
+      choicesDiv.innerHTML = '';
+      actionsDiv.innerHTML = '';
+      if(currentType === 'TF'){
+        choicesDiv.innerHTML = `
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="form-check border rounded p-2">
+                <input type="radio" name="q${qIndex}_tf_correct" value="true" class="form-check-input" id="q${qIndex}_true" checked>
+                <label for="q${qIndex}_true" class="form-check-label">True (correct)</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check border rounded p-2">
+                <input type="radio" name="q${qIndex}_tf_correct" value="false" class="form-check-input" id="q${qIndex}_false">
+                <label for="q${qIndex}_false" class="form-check-label">False (correct)</label>
+              </div>
+            </div>
+          </div>`;
+      } else {
+        choicesDiv.innerHTML = `<div class="mb-2 small text-muted">Add choices and tick correct ones.</div>`;
+        const list = document.createElement('div');
+        list.dataset.list = 'choices';
+        choicesDiv.appendChild(list);
+        actionsDiv.innerHTML = `<button type="button" class="btn btn-sm btn-outline-success" data-add-choice>Add Choice</button>`;
+        let count = 0;
+        function addChoice(text='', isCorrect=false){
+          count += 1;
+          wrapper.querySelector(`[name='q${qIndex}_choice_count']`)?.remove();
+          const hiddenCount = document.createElement('input');
+          hiddenCount.type='hidden';
+          hiddenCount.name=`q${qIndex}_choice_count`;
+          hiddenCount.value=count;
+          wrapper.appendChild(hiddenCount);
+          const row = document.createElement('div');
+          row.className='input-group mb-2';
+          row.innerHTML = `
+            <div class="input-group-text">
+              <input class="form-check-input mt-0" type="checkbox" name="q${qIndex}_choice${count}_correct" ${isCorrect?'checked':''}>
+            </div>
+            <input type="text" class="form-control" name="q${qIndex}_choice${count}_text" placeholder="Choice text" value="${text}" required />
+            <button class="btn btn-outline-danger" type="button" data-remove-choice>&times;</button>`;
+          list.appendChild(row);
+          row.querySelector('[data-remove-choice]').addEventListener('click', ()=>{
+            row.remove();
+            // Recompute count
+            const remaining = list.querySelectorAll('.input-group');
+            count = 0;
+            remaining.forEach((grp,i)=>{
+              count = i+1;
+            });
+            hiddenCount.value = count;
+          });
+        }
+        actionsDiv.querySelector('[data-add-choice]').addEventListener('click', ()=>addChoice());
+        if(choicesData && choicesData.length){
+          choicesData.forEach(c=> addChoice(c.text, c.is_correct));
+        } else {
+          addChoice();
+          addChoice();
+        }
+      }
+    }
+    typeSelect.addEventListener('change', renderChoices);
+    renderChoices();
+  }
+
+  document.getElementById('addQuestionBtn').addEventListener('click', ()=> addQuestion());
+  renderExisting();
+})();
+</script>
+{% endblock %}

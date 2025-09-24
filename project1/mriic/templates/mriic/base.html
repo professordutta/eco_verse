@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EcoVerse{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --eco-green: #2d6a4f;
+            --eco-light-green: #89c997;
+            --eco-bg: #eaf7ec;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        /* Custom button styling */
+        .btn-success {
+            background-color: var(--eco-green);
+            border-color: var(--eco-green);
+        }
+        
+        .btn-success:hover {
+            background-color: #1f4d38;
+            border-color: #1f4d38;
+        }
+        
+        .btn-outline-success {
+            color: var(--eco-green);
+            border-color: var(--eco-green);
+        }
+        
+        .btn-outline-success:hover {
+            background-color: var(--eco-green);
+            border-color: var(--eco-green);
+        }
+        
+        .text-success {
+            color: var(--eco-green) !important;
+        }
+        
+        /* Custom navbar styling */
+        .navbar {
+            background-color: var(--eco-bg) !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'mriic/navbar.html' %}
+    
+    <main>
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'mriic/footer.html' %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

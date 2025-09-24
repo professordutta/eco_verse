@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Forest Guardian - Rescue Mission</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      overflow: hidden; 
+      background: linear-gradient(135deg, #1a4a3a 0%, #2d5a4f 100%);
+      font-family: 'Orbitron', monospace;
+      cursor: crosshair;
+      height: 100vh;
+    }
+    
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a4a3a 0%, #2d5a4f 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #00ff88;
+      font-size: 24px;
+      z-index: 1000;
+    }
+    
+    #gameContainer {
+      display: none;
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    #ui {
+      position: absolute; 
+      top: 20px; 
+      left: 20px; 
+      color: #00ff88; 
+      z-index: 10;
+      background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(26,74,58,0.9) 100%);
+      padding: 20px; 
+      border-radius: 15px;
+      border: 2px solid rgba(0,255,136,0.3);
+      box-shadow: 0 0 30px rgba(0,255,136,0.2);
+      backdrop-filter: blur(10px);
+      font-weight: 700;
+      letter-spacing: 1px;
+      min-width: 250px;
+    }
+    
+    .stat {
+      display: block;
+      margin: 8px 0;
+      font-size: 16px;
+      text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    
+    .progress-bar {
+      width: 200px;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff88, #00cc66);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    
+    #instructions {
+      position: absolute; 
+      bottom: 20px; 
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff; 
+      background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(45,90,79,0.9) 100%);
+      padding: 15px 25px; 
+      border-radius: 12px; 
+      font-size: 14px;
+      border: 1px solid rgba(0,255,136,0.3);
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    #minimap {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 150px;
+      height: 150px;
+      background: rgba(0,0,0,0.8);
+      border: 2px solid rgba(0,255,136,0.3);
+      border-radius: 10px;
+      z-index: 10;
+    }
+    
+    .interaction-prompt {
+      position: absolute;
+      background: rgba(0,255,136,0.9);
+      color: #000;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      transform: translate(-50%, -100%);
+      animation: bounce 2s infinite;
+      pointer-events: none;
+      z-index: 50;
+    }
+    
+    #gameComplete {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(0,255,136,0.95) 0%, rgba(0,200,100,0.95) 100%);
+      color: #000;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 900;
+      display: none;
+      box-shadow: 0 0 50px rgba(0,255,136,0.8);
+      z-index: 100;
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translate(-50%, -100%); }
+      40% { transform: translate(-50%, -110px); }
+      60% { transform: translate(-50%, -105px); }
+    }
+    
+    .spinner {
+      border: 4px solid rgba(0,255,136,0.3);
+      border-radius: 50%;
+      border-top: 4px solid #00ff88;
+      width: 40px;
+      height: 40px;
+      animation: spin 2s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div>Loading Forest Guardian...</div>
+  <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Initializing 3D Environment</div>
+</div>
+
+<div id="gameContainer">
+  <div id="ui">
+    <div class="stat">🦌 Animals Rescued: <span id="rescued">0</span>/5</div>
+    <div class="progress-bar"><div id="rescueProgress" class="progress-fill" style="width: 0%"></div></div>
+    
+    <div class="stat">🛢️ Spills Cleaned: <span id="cleaned">0</span>/4</div>
+    <div class="progress-bar"><div id="cleanProgress" class="progress-fill" style="width: 0%"></div></div>
+    
+    <div class="stat">⭐ Mission Progress: <span id="totalProgress">0</span>%</div>
+  </div>
+
+  <canvas id="minimap"></canvas>
+
+  <div id="instructions">
+    🎮 <strong>WASD/Arrow Keys:</strong> Move (Camera-Relative) | <strong>Mouse:</strong> 360° Camera | <strong>E:</strong> Interact | <strong>ESC:</strong> Release Mouse
+  </div>
+
+  <div id="gameComplete">
+    <h2>🎉 MISSION ACCOMPLISHED! 🎉</h2>
+    <p>You've successfully rescued all animals and cleaned all oil spills!</p>
+    <p>The forest is safe thanks to you, Forest Guardian!</p>
+  </div>
+</div>
+
+<script>
+// Global variables
+let scene, camera, renderer, player;
+let rescued = 0, cleaned = 0;
+let keys = {};
+let camYaw = 0, camPitch = 0;
+let pointerLocked = false;
+let nearbyInteractable = null;
+let interactionPrompt = null;
+let interactables = { traps: [], spills: [], animals: [] };
+let particles = [];
+let audioContext = null;
+
+// Game constants
+const PLAYER_SPEED = 0.18;
+const CAMERA_DISTANCE = 8;
+const CAMERA_HEIGHT = 4;
+const NUM_TRAPS = 5;
+const NUM_SPILLS = 4;
+const NUM_ANIMALS = 5;
+const FOREST_SIZE = 80;
+const INTERACTION_DISTANCE = 3;
+
+// Load Three.js and initialize game
+function loadThreeJS() {
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  script.onload = function() {
+    console.log('Three.js loaded successfully');
+    setTimeout(initGame, 500); // Small delay to ensure everything is ready
+  };
+  script.onerror = function() {
+    document.getElementById('loading').innerHTML = `
+      <div style="color: #ff4444;">
+        <h2>Failed to load 3D engine</h2>
+        <p>Please check your internet connection and refresh the page.</p>
+      </div>
+    `;
+  };
+  document.head.appendChild(script);
+}
+
+function initGame() {
+  try {
+    // Hide loading screen
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('gameContainer').style.display = 'block';
+    
+    setupScene();
+    createWorld();
+    setupPlayer();
+    setupCamera();
+    setupControls();
+    setupInteractables();
+    setupMinimap();
+    updateUI();
+    animate();
+    
+    console.log('Game initialized successfully');
+  } catch (error) {
+    console.error('Game initialization error:', error);
+    document.getElementById('loading').innerHTML = `
+      <div style="color: #ff4444;">
+        <h2>Game initialization failed</h2>
+        <p>Error: ${error.message}</p>
+        <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 10px; background: #00ff88; color: #000; border: none; border-radius: 5px; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+function setupScene() {
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87CEEB);
+  scene.fog = new THREE.Fog(0x336633, 20, 60);
+  
+  // Camera
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+  
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.getElementById('gameContainer').appendChild(renderer.domElement);
+  
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+  scene.add(ambientLight);
+  
+  const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+  sunLight.position.set(50, 50, 25);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.width = 1024;
+  sunLight.shadow.mapSize.height = 1024;
+  scene.add(sunLight);
+}
+
+function createWorld() {
+  // Ground
+  const groundGeometry = new THREE.PlaneGeometry(FOREST_SIZE, FOREST_SIZE);
+  const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x228822 });
+  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+  ground.rotation.x = -Math.PI/2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  
+  // Trees
+  for (let i = 0; i < 40; i++) {
+    let x, z;
+    do {
+      x = (Math.random()-0.5) * FOREST_SIZE * 0.8;
+      z = (Math.random()-0.5) * FOREST_SIZE * 0.8;
+    } while (Math.sqrt(x*x + z*z) < 8);
+    
+    addTree(x, z);
+  }
+}
+
+function addTree(x, z) {
+  const scale = 0.8 + Math.random() * 0.4;
+  
+  // Trunk
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2 * scale, 0.4 * scale, 2.5 * scale, 8),
+    new THREE.MeshLambertMaterial({color: 0x8B5A2B})
+  );
+  trunk.position.set(x, 1.25 * scale, z);
+  trunk.castShadow = true;
+  scene.add(trunk);
+  
+  // Leaves
+  const leaves = new THREE.Mesh(
+    new THREE.SphereGeometry(1.5 * scale, 8, 6),
+    new THREE.MeshLambertMaterial({color: 0x228B22})
+  );
+  leaves.position.set(x, 3 * scale, z);
+  leaves.castShadow = true;
+  scene.add(leaves);
+}
+
+function setupPlayer() {
+  player = new THREE.Group();
+  
+  // Body
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 1.5, 8),
+    new THREE.MeshLambertMaterial({color: 0x4169E1})
+  );
+  body.position.y = 0.75;
+  body.castShadow = true;
+  player.add(body);
+  
+  // Head
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 12, 8),
+    new THREE.MeshLambertMaterial({color: 0xFFDBAC})
+  );
+  head.position.y = 1.8;
+  head.castShadow = true;
+  player.add(head);
+  
+  player.position.set(0, 1, 0);
+  scene.add(player);
+}
+
+function setupCamera() {
+  function updateCamera() {
+    const offset = new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_DISTANCE);
+    offset.applyAxisAngle(new THREE.Vector3(0,1,0), camYaw);
+    offset.applyAxisAngle(new THREE.Vector3(1,0,0), camPitch);
+    camera.position.copy(player.position).add(offset);
+    
+    const lookTarget = player.position.clone().add(new THREE.Vector3(0, 1.5, 0));
+    camera.lookAt(lookTarget);
+  }
+  
+  window.updateCamera = updateCamera;
+}
+
+function setupControls() {
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === 'escape') {
+      document.exitPointerLock();
+    }
+    if (e.key.toLowerCase() === 'e' && nearbyInteractable) {
+      interact();
+    }
+  });
+  
+  document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+  
+  // Mouse
+  renderer.domElement.addEventListener('click', () => {
+    renderer.domElement.requestPointerLock();
+  });
+  
+  document.addEventListener('pointerlockchange', () => {
+    pointerLocked = document.pointerLockElement === renderer.domElement;
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (pointerLocked) {
+      camYaw -= e.movementX * 0.002;
+      camPitch -= e.movementY * 0.002;
+      // Remove pitch limits for full 360° rotation
+      camPitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, camPitch));
+    }
+  });
+}
+
+function setupInteractables() {
+  // Create traps
+  for (let i = 0; i < NUM_TRAPS; i++) {
+    const pos = getRandomPosition();
+    const trap = new THREE.Mesh(
+      new THREE.TorusGeometry(0.8, 0.15, 8, 16),
+      new THREE.MeshLambertMaterial({color: 0x666666})
+    );
+    trap.position.set(pos.x, 0.3, pos.z);
+    trap.userData = {type: 'trap', id: i};
+    scene.add(trap);
+    interactables.traps.push(trap);
+  }
+  
+  // Create spills
+  for (let i = 0; i < NUM_SPILLS; i++) {
+    const pos = getRandomPosition();
+    const spill = new THREE.Mesh(
+      new THREE.CircleGeometry(1.5, 24),
+      new THREE.MeshLambertMaterial({color: 0x1a1a1a, transparent: true, opacity: 0.8})
+    );
+    spill.rotation.x = -Math.PI/2;
+    spill.position.set(pos.x, 0.02, pos.z);
+    spill.userData = {type: 'spill', id: i};
+    scene.add(spill);
+    interactables.spills.push(spill);
+  }
+  
+  // Create animals
+  const colors = [0xffcc66, 0xff8866, 0x66ccff, 0xcc66ff, 0x66ffcc];
+  for (let i = 0; i < NUM_ANIMALS; i++) {
+    const pos = getRandomPosition();
+    const animal = new THREE.Group();
+    
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(0.4, 12, 8),
+      new THREE.MeshLambertMaterial({color: colors[i]})
+    );
+    body.position.y = 0.4;
+    body.castShadow = true;
+    animal.add(body);
+    
+    animal.position.set(pos.x, 0, pos.z);
+    animal.userData = {type: 'animal', id: i, bobOffset: Math.random() * Math.PI * 2};
+    scene.add(animal);
+    interactables.animals.push(animal);
+  }
+}
+
+function getRandomPosition() {
+  let x, z, attempts = 0;
+  do {
+    x = (Math.random()-0.5) * FOREST_SIZE * 0.7;
+    z = (Math.random()-0.5) * FOREST_SIZE * 0.7;
+    attempts++;
+  } while (Math.sqrt(x*x + z*z) < 10 && attempts < 50);
+  return {x, z};
+}
+
+function setupMinimap() {
+  const canvas = document.getElementById('minimap');
+  canvas.width = 150;
+  canvas.height = 150;
+  window.minimapCanvas = canvas;
+  window.minimapCtx = canvas.getContext('2d');
+}
+
+function movePlayer() {
+  let moveDir = new THREE.Vector3();
+  
+  // Camera-relative movement - arrows/WASD move relative to camera direction
+  if (keys['w'] || keys['arrowup']) moveDir.z -= 1;      // Forward relative to camera
+  if (keys['s'] || keys['arrowdown']) moveDir.z += 1;    // Backward relative to camera  
+  if (keys['a'] || keys['arrowleft']) moveDir.x -= 1;    // Left relative to camera
+  if (keys['d'] || keys['arrowright']) moveDir.x += 1;   // Right relative to camera
+  
+  if (moveDir.lengthSq() > 0) {
+    moveDir.normalize();
+    
+    // Get camera's forward direction (projected onto XZ plane)
+    const camForward = new THREE.Vector3();
+    camera.getWorldDirection(camForward);
+    camForward.y = 0; // Remove vertical component
+    camForward.normalize();
+    
+    // Get camera's right direction (perpendicular to forward on XZ plane)
+    const camRight = new THREE.Vector3(-camForward.z, 0, camForward.x).normalize();
+    
+    // Calculate movement vector relative to camera orientation
+    const move = new THREE.Vector3();
+    move.addScaledVector(camForward, -moveDir.z); // Forward/backward
+    move.addScaledVector(camRight, moveDir.x);    // Left/right
+    
+    if (move.lengthSq() > 0) {
+      move.normalize().multiplyScalar(PLAYER_SPEED);
+      player.position.add(move);
+      
+      // Boundary check
+      player.position.x = Math.max(-FOREST_SIZE/2+2, Math.min(FOREST_SIZE/2-2, player.position.x));
+      player.position.z = Math.max(-FOREST_SIZE/2+2, Math.min(FOREST_SIZE/2-2, player.position.z));
+      
+      // Smoothly rotate player to face movement direction
+      const targetRotation = Math.atan2(move.x, move.z);
+      const currentRotation = player.rotation.y;
+      let diff = targetRotation - currentRotation;
+      
+      // Handle angle wrapping
+      if (diff > Math.PI) diff -= 2 * Math.PI;
+      if (diff < -Math.PI) diff += 2 * Math.PI;
+      
+      // Smooth rotation interpolation
+      player.rotation.y += diff * 0.1;
+      
+      // Add subtle walking animation
+      const time = Date.now() * 0.01;
+      player.children[0].position.y = 0.75 + Math.sin(time) * 0.05; // Body bob
+    }
+  }
+}
+
+function checkInteractions() {
+  let closest = null;
+  let closestDistance = INTERACTION_DISTANCE;
+  
+  [...interactables.traps, ...interactables.spills, ...interactables.animals].forEach(obj => {
+    if (!obj.visible) return;
+    
+    const distance = obj.position.distanceTo(player.position);
+    if (distance < closestDistance) {
+      closest = obj;
+      closestDistance = distance;
+    }
+  });
+  
+  if (closest !== nearbyInteractable) {
+    if (interactionPrompt) {
+      interactionPrompt.remove();
+      interactionPrompt = null;
+    }
+    
+    nearbyInteractable = closest;
+    
+    if (nearbyInteractable) {
+      showInteractionPrompt();
+    }
+  }
+  
+  if (interactionPrompt && nearbyInteractable) {
+    updatePromptPosition();
+  }
+}
+
+function showInteractionPrompt() {
+  interactionPrompt = document.createElement('div');
+  interactionPrompt.className = 'interaction-prompt';
+  
+  const messages = {
+    trap: 'Press E to Free Animal',
+    spill: 'Press E to Clean Spill',
+    animal: 'Press E to Rescue Animal'
+  };
+  
+  interactionPrompt.textContent = messages[nearbyInteractable.userData.type];
+  document.body.appendChild(interactionPrompt);
+}
+
+function updatePromptPosition() {
+  if (!interactionPrompt || !nearbyInteractable) return;
+  
+  const vector = new THREE.Vector3();
+  vector.setFromMatrixPosition(nearbyInteractable.matrixWorld);
+  vector.y += 2;
+  vector.project(camera);
+  
+  const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+  const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+  
+  interactionPrompt.style.left = x + 'px';
+  interactionPrompt.style.top = y + 'px';
+}
+
+function interact() {
+  if (!nearbyInteractable) return;
+  
+  const obj = nearbyInteractable;
+  const type = obj.userData.type;
+  
+  // Hide object
+  obj.visible = false;
+  
+  // Create particles
+  createParticles(obj.position, type);
+  
+  // Update counters
+  if (type === 'trap' || type === 'animal') {
+    rescued++;
+  } else if (type === 'spill') {
+    cleaned++;
+  }
+  
+  updateUI();
+  
+  // Remove prompt
+  if (interactionPrompt) {
+    interactionPrompt.remove();
+    interactionPrompt = null;
+  }
+  nearbyInteractable = null;
+  
+  // Visual feedback
+  document.body.style.filter = 'brightness(1.3)';
+  setTimeout(() => document.body.style.filter = 'none', 200);
+}
+
+function createParticles(position, type) {
+  const colors = {
+    trap: 0x00ff88,
+    spill: 0x4169E1,
+    animal: 0xffd700
+  };
+  
+  for (let i = 0; i < 10; i++) {
+    const particle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05, 4, 4),
+      new THREE.MeshBasicMaterial({color: colors[type], transparent: true})
+    );
+    
+    particle.position.copy(position);
+    particle.velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * 0.3,
+      Math.random() * 0.4 + 0.2,
+      (Math.random() - 0.5) * 0.3
+    );
+    particle.life = 1.0;
+    
+    scene.add(particle);
+    particles.push(particle);
+  }
+}
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const particle = particles[i];
+    particle.position.add(particle.velocity);
+    particle.velocity.y -= 0.01;
+    particle.life -= 0.02;
+    particle.material.opacity = particle.life;
+    
+    if (particle.life <= 0) {
+      scene.remove(particle);
+      particles.splice(i, 1);
+    }
+  }
+}
+
+function animateObjects() {
+  // Animate animals
+  interactables.animals.forEach((animal, index) => {
+    if (!animal.visible) return;
+    const time = Date.now() * 0.002;
+    animal.position.y = Math.sin(time + animal.userData.bobOffset) * 0.1;
+  });
+  
+  // Animate traps
+  interactables.traps.forEach((trap, index) => {
+    if (!trap.visible) return;
+    trap.rotation.y += 0.01;
+  });
+}
+
+function updateMinimap() {
+  if (!window.minimapCtx) return;
+  
+  const ctx = window.minimapCtx;
+  ctx.clearRect(0, 0, 150, 150);
+  
+  // Background
+  ctx.fillStyle = 'rgba(34, 136, 34, 0.8)';
+  ctx.fillRect(0, 0, 150, 150);
+  
+  // Border
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, 150, 150);
+  
+  const scale = 150 / FOREST_SIZE;
+  const centerX = 75;
+  const centerY = 75;
+  
+  // Player
+  const playerX = centerX + player.position.x * scale;
+  const playerY = centerY + player.position.z * scale;
+  
+  ctx.fillStyle = '#4169E1';
+  ctx.beginPath();
+  ctx.arc(playerX, playerY, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Objects
+  [...interactables.traps, ...interactables.spills, ...interactables.animals].forEach(obj => {
+    if (!obj.visible) return;
+    
+    const objX = centerX + obj.position.x * scale;
+    const objY = centerY + obj.position.z * scale;
+    
+    const colors = {
+      trap: '#ff4444',
+      spill: '#444444',
+      animal: '#ffcc66'
+    };
+    
+    ctx.fillStyle = colors[obj.userData.type];
+    ctx.beginPath();
+    ctx.arc(objX, objY, 2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function updateUI() {
+  document.getElementById('rescued').textContent = rescued;
+  document.getElementById('cleaned').textContent = cleaned;
+  
+  const rescuePercent = (rescued / NUM_ANIMALS) * 100;
+  const cleanPercent = (cleaned / NUM_SPILLS) * 100;
+  const totalPercent = ((rescued + cleaned) / (NUM_ANIMALS + NUM_SPILLS)) * 100;
+  
+  document.getElementById('rescueProgress').style.width = rescuePercent + '%';
+  document.getElementById('cleanProgress').style.width = cleanPercent + '%';
+  document.getElementById('totalProgress').textContent = Math.round(totalPercent);
+  
+  // Check win condition
+  if (rescued === NUM_ANIMALS && cleaned === NUM_SPILLS) {
+    setTimeout(() => {
+      document.getElementById('gameComplete').style.display = 'block';
+    }, 1000);
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  
+  movePlayer();
+  window.updateCamera();
+  checkInteractions();
+  animateObjects();
+  updateParticles();
+  updateMinimap();
+  
+  renderer.render(scene, camera);
+}
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  if (camera && renderer) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+});
+
+// Start loading
+loadThreeJS();
+</script>
+
+</body>
+</html>

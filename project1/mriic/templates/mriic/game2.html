@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albatross Ocean Foraging</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 30%, #2F4F4F 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        canvas {
+            border: 4px solid #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 60%, #2F4F4F 100%);
+        }
+        
+        .game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .ui-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 18px 30px;
+            border-radius: 30px;
+            display: flex;
+            gap: 35px;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .health-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .health-hearts {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .heart {
+            width: 24px;
+            height: 24px;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .heart.lost {
+            opacity: 0.3;
+            transform: scale(0.8);
+        }
+        
+        .score, .food-count, .depth {
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .controls {
+            text-align: center;
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 15px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            color: white;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .restart-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 17px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.5);
+        }
+        
+        .dive-indicator {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="ui-panel">
+            <div class="health-bar">
+                <span>🫀 Health:</span>
+                <div class="health-hearts" id="health-hearts"></div>
+            </div>
+            <div class="food-count">🐟 Food: <span id="food-count">0</span>/<span id="food-target">20</span></div>
+            <div class="score">⭐ Score: <span id="score">0</span></div>
+            <div class="depth">🌊 Depth: <span id="depth">Sky</span></div>
+        </div>
+        
+        <div style="position: relative;">
+            <canvas id="gameCanvas" width="900" height="650"></canvas>
+            <div class="dive-indicator" id="dive-indicator">Dive down to catch fish! 🐟</div>
+        </div>
+        
+        <div class="controls">
+            <div><strong>🎮 Controls:</strong> WASD or Arrow Keys to fly • Dive into water to catch fish</div>
+            <div><strong>⚠️ Warning:</strong> Avoid plastic pollution - it will make you sick!</div>
+        </div>
+        
+        <div class="game-over" id="game-over">
+            <h2 id="game-over-title">🐣 Game Over</h2>
+            <p id="game-over-message"></p>
+            <p><strong>Final Score:</strong> <span id="final-score">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">🦅 Fly Again</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameRunning = true;
+        let score = 0;
+        let foodCollected = 0;
+        let health = 3;
+        let gameTime = 0;
+        const WINNING_FOOD_TARGET = 20; // Win condition: collect 20 fish
+        
+        // Ocean level - this is crucial for realistic fish behavior
+        const OCEAN_SURFACE = canvas.height * 0.6; // 60% down from top
+        const OCEAN_FLOOR = canvas.height - 50;
+        
+        // Player (Albatross)
+        const player = {
+            x: 100,
+            y: 200,
+            width: 70,
+            height: 45,
+            speed: 4.5,
+            vx: 0,
+            vy: 0,
+            diving: false,
+            wingFlap: 0
+        };
+        
+        // Game objects
+        let fish = [];
+        let plastic = [];
+        let bubbles = [];
+        let particles = [];
+        let clouds = [];
+        
+        // Water physics
+        let waveOffset = 0;
+        const WATER_RESISTANCE = 0.8;
+        
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+        
+        // Initialize clouds
+        function initClouds() {
+            for (let i = 0; i < 8; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * 150 + 30,
+                    size: Math.random() * 50 + 25,
+                    speed: Math.random() * 0.3 + 0.1,
+                    opacity: Math.random() * 0.3 + 0.6
+                });
+            }
+        }
+        
+        // Draw animated ocean background
+        function drawOcean() {
+            // Sky gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, OCEAN_SURFACE);
+            skyGradient.addColorStop(0, '#87CEEB');
+            skyGradient.addColorStop(0.7, '#4682B4');
+            skyGradient.addColorStop(1, '#2F4F4F');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, OCEAN_SURFACE);
+            
+            // Ocean waves
+            ctx.beginPath();
+            ctx.moveTo(0, OCEAN_SURFACE);
+            
+            for (let x = 0; x <= canvas.width; x += 8) {
+                const wave1 = Math.sin(x * 0.02 + waveOffset) * 12;
+                const wave2 = Math.sin(x * 0.03 + waveOffset * 0.7) * 8;
+                const y = OCEAN_SURFACE + wave1 + wave2;
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.closePath();
+            
+            // Ocean gradient
+            const oceanGradient = ctx.createLinearGradient(0, OCEAN_SURFACE, 0, canvas.height);
+            oceanGradient.addColorStop(0, '#4682B4');
+            oceanGradient.addColorStop(0.3, '#2F4F4F');
+            oceanGradient.addColorStop(1, '#1e3a3a');
+            ctx.fillStyle = oceanGradient;
+            ctx.fill();
+            
+            // Ocean surface shimmer
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let x = 0; x <= canvas.width; x += 15) {
+                const shimmer = Math.sin(x * 0.05 + waveOffset * 2) * 3;
+                ctx.moveTo(x, OCEAN_SURFACE + shimmer - 2);
+                ctx.lineTo(x + 8, OCEAN_SURFACE + shimmer + 2);
+            }
+            ctx.stroke();
+            ctx.restore();
+            
+            waveOffset += 0.03;
+        }
+        
+        // Draw clouds
+        function drawClouds() {
+            clouds.forEach(cloud => {
+                ctx.save();
+                ctx.globalAlpha = cloud.opacity;
+                ctx.fillStyle = '#ffffff';
+                
+                // Main cloud body
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 0.6, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
+                ctx.arc(cloud.x - cloud.size * 0.6, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 0.3, cloud.y - cloud.size * 0.4, cloud.size * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                cloud.x -= cloud.speed;
+                if (cloud.x < -cloud.size * 2) {
+                    cloud.x = canvas.width + cloud.size;
+                    cloud.y = Math.random() * 150 + 30;
+                }
+                
+                ctx.restore();
+            });
+        }
+        
+        // Draw albatross with detailed animations
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            
+            // Diving tilt
+            if (player.diving) {
+                ctx.rotate(Math.PI * 0.1);
+            }
+            
+            // Wing animation
+            player.wingFlap += 0.15;
+            const wingOffset = Math.sin(player.wingFlap) * 8;
+            
+            // Shadow when over water
+            if (player.y > OCEAN_SURFACE - 50) {
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#000000';
+                const shadowY = OCEAN_SURFACE - player.y + 20;
+                ctx.ellipse(0, shadowY, 25, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            // Right wing (behind body)
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.ellipse(25, -8 + wingOffset * 0.5, 28, 12, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Right wing tip (behind body)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.ellipse(35, -5 + wingOffset * 0.7, 15, 6, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Body
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 30, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Head
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(12, -8, 18, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Beak
+            ctx.fillStyle = '#FFA500';
+            ctx.beginPath();
+            ctx.moveTo(25, -8);
+            ctx.lineTo(38, -10);
+            ctx.lineTo(38, -6);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Eye
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(18, -12, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye highlight
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(19, -13, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Left wing (in front - same position)
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.ellipse(-25, -8 + wingOffset * 0.5, 28, 12, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Left wing tip (in front - same position)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.ellipse(-35, -5 + wingOffset * 0.7, 15, 6, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // Spawn fish - ONLY in water!
+        function spawnFish() {
+            if (Math.random() < 0.015 && fish.length < 12) {
+                fish.push({
+                    x: canvas.width + 50,
+                    y: OCEAN_SURFACE + 50 + Math.random() * (OCEAN_FLOOR - OCEAN_SURFACE - 100),
+                    width: 35,
+                    height: 25,
+                    speed: Math.random() * 1.5 + 1,
+                    swimOffset: Math.random() * Math.PI * 2,
+                    type: Math.random() > 0.7 ? 'special' : 'normal'
+                });
+            }
+        }
+        
+        // Spawn plastic
+        function spawnPlastic() {
+            if (Math.random() < 0.008 && plastic.length < 8) {
+                const types = ['bottle', 'bag', 'ring', 'cup'];
+                plastic.push({
+                    x: canvas.width + 50,
+                    y: OCEAN_SURFACE - 15 + Math.random() * 30, // Float on surface
+                    width: 30,
+                    height: 30,
+                    speed: Math.random() * 1.2 + 0.8,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    bobOffset: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        // Draw fish with swimming animation - ONLY underwater
+        function drawFish() {
+            fish.forEach((f, index) => {
+                // Ensure fish stay underwater
+                if (f.y < OCEAN_SURFACE + 20) {
+                    f.y = OCEAN_SURFACE + 20;
+                }
+                
+                ctx.save();
+                ctx.translate(f.x + f.width/2, f.y + f.height/2);
+                
+                // Swimming animation
+                f.swimOffset += 0.1;
+                const tailSwish = Math.sin(f.swimOffset) * 0.3;
+                ctx.rotate(tailSwish * 0.1);
+                
+                // Fish body
+                const fishColor = f.type === 'special' ? '#FFD700' : '#FF6B6B';
+                ctx.fillStyle = fishColor;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, f.width/2, f.height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Tail with animation
+                ctx.fillStyle = fishColor;
+                ctx.beginPath();
+                ctx.moveTo(-f.width/2, 0);
+                ctx.lineTo(-f.width * 0.8 + tailSwish * 5, -f.height/3 + tailSwish * 3);
+                ctx.lineTo(-f.width * 0.8 + tailSwish * 5, f.height/3 + tailSwish * 3);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Fins
+                ctx.fillStyle = fishColor;
+                ctx.beginPath();
+                ctx.ellipse(f.width/4, f.height/3, 8, 4, 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eye
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(f.width/4, -f.height/6, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eye highlight
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(f.width/4 + 1, -f.height/6 - 1, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Special fish glow
+                if (f.type === 'special') {
+                    ctx.save();
+                    ctx.globalAlpha = 0.3;
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 20;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.ellipse(0, 0, f.width/2 + 5, f.height/2 + 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+                
+                ctx.restore();
+                
+                f.x -= f.speed;
+                
+                // Add swimming bubbles occasionally
+                if (Math.random() < 0.05) {
+                    createBubble(f.x, f.y);
+                }
+                
+                // Remove off-screen fish
+                if (f.x < -f.width) {
+                    fish.splice(index, 1);
+                }
+            });
+        }
+        
+        // Draw plastic with bobbing animation
+        function drawPlastic() {
+            plastic.forEach((p, index) => {
+                // Bobbing on water surface
+                p.bobOffset += 0.05;
+                const bobAmount = Math.sin(p.bobOffset) * 8;
+                const drawY = p.y + bobAmount;
+                
+                ctx.save();
+                ctx.translate(p.x + p.width/2, drawY + p.height/2);
+                
+                // Pollution warning glow - subtle ring without shadow blur
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.strokeStyle = '#ff4757';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath();
+                ctx.ellipse(0, 0, p.width/2 + 8, p.height/2 + 8, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]); // Reset line dash
+                ctx.restore();
+                
+                if (p.type === 'bottle') {
+                    // Plastic bottle
+                    ctx.fillStyle = '#4ECDC4';
+                    ctx.fillRect(-p.width/3, -p.height/2, p.width * 0.6, p.height);
+                    ctx.fillStyle = '#3AAAA0';
+                    ctx.fillRect(-p.width/3, -p.height/2, p.width * 0.6, p.height/4);
+                    // Cap
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.fillRect(-p.width/4, -p.height/2 - 5, p.width * 0.5, 8);
+                } else if (p.type === 'bag') {
+                    // Plastic bag
+                    ctx.fillStyle = 'rgba(200, 200, 200, 0.8)';
+                    ctx.beginPath();
+                    ctx.moveTo(-p.width/3, -p.height/3);
+                    ctx.lineTo(p.width/3, -p.height/3 + 3);
+                    ctx.lineTo(p.width/4, p.height/3);
+                    ctx.lineTo(-p.width/4, p.height/3 - 2);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (p.type === 'ring') {
+                    // Six-pack ring
+                    ctx.strokeStyle = '#FFFF00';
+                    ctx.lineWidth = 4;
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        const x = Math.cos(angle) * p.width/4;
+                        const y = Math.sin(angle) * p.height/4;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 6, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                } else {
+                    // Cup
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.moveTo(-p.width/3, p.height/2);
+                    ctx.lineTo(-p.width/4, -p.height/2);
+                    ctx.lineTo(p.width/4, -p.height/2);
+                    ctx.lineTo(p.width/3, p.height/2);
+                    ctx.closePath();
+                    ctx.fill();
+                    // Lid
+                    ctx.fillStyle = '#333';
+                    ctx.ellipse(0, -p.height/2, p.width/4, 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+                
+                p.x -= p.speed;
+                
+                if (p.x < -p.width) {
+                    plastic.splice(index, 1);
+                }
+            });
+        }
+        
+        // Create bubbles
+        function createBubble(x, y) {
+            bubbles.push({
+                x: x + Math.random() * 20 - 10,
+                y: y,
+                size: Math.random() * 8 + 3,
+                speed: Math.random() * 2 + 1,
+                life: 1
+            });
+        }
+        
+        // Draw bubbles
+        function drawBubbles() {
+            bubbles.forEach((bubble, index) => {
+                ctx.save();
+                ctx.globalAlpha = bubble.life * 0.6;
+                
+                // Bubble gradient
+                const gradient = ctx.createRadialGradient(
+                    bubble.x, bubble.y, 0,
+                    bubble.x, bubble.y, bubble.size
+                );
+                gradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+                gradient.addColorStop(0.7, 'rgba(135,206,235,0.6)');
+                gradient.addColorStop(1, 'rgba(135,206,235,0.1)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Highlight
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath();
+                ctx.arc(bubble.x - bubble.size * 0.3, bubble.y - bubble.size * 0.3, bubble.size * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+                
+                bubble.y -= bubble.speed;
+                bubble.life -= 0.01;
+                bubble.size += 0.05;
+                
+                if (bubble.life <= 0 || bubble.y < OCEAN_SURFACE - 20) {
+                    bubbles.splice(index, 1);
+                }
+            });
+        }
+        
+        // Handle player movement with water physics
+        function updatePlayer() {
+            // Reset velocity
+            player.vx *= 0.95; // Air resistance
+            player.vy *= 0.95;
+            
+            // Handle input
+            if (keys['ArrowLeft'] || keys['KeyA']) {
+                player.vx = Math.max(player.vx - 0.5, -player.speed);
+            }
+            if (keys['ArrowRight'] || keys['KeyD']) {
+                player.vx = Math.min(player.vx + 0.5, player.speed);
+            }
+            if (keys['ArrowUp'] || keys['KeyW']) {
+                player.vy = Math.max(player.vy - 0.5, -player.speed);
+            }
+            if (keys['ArrowDown'] || keys['KeyS']) {
+                player.vy = Math.min(player.vy + 0.5, player.speed);
+            }
+            
+            // Check if diving underwater
+            player.diving = player.y > OCEAN_SURFACE - 20;
+            
+            // Apply water resistance when underwater
+            if (player.diving) {
+                player.vx *= WATER_RESISTANCE;
+                player.vy *= WATER_RESISTANCE;
+                
+                // Create bubbles when moving underwater
+                if (Math.abs(player.vx) > 1 || Math.abs(player.vy) > 1) {
+                    if (Math.random() < 0.3) {
+                        createBubble(player.x + player.width/2, player.y + player.height/2);
+                    }
+                }
+            }
+            
+            // Update position
+            player.x += player.vx;
+            player.y += player.vy;
+            
+            // Boundary checking
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+            
+            // Update depth indicator
+            updateDepthIndicator();
+        }
+        
+        // Update depth indicator
+        function updateDepthIndicator() {
+            const depthElement = document.getElementById('depth');
+            const diveIndicator = document.getElementById('dive-indicator');
+            
+            if (player.y < OCEAN_SURFACE - 50) {
+                depthElement.textContent = 'Sky';
+                diveIndicator.style.display = 'block';
+            } else if (player.y < OCEAN_SURFACE + 20) {
+                depthElement.textContent = 'Surface';
+                diveIndicator.style.display = 'none';
+            } else if (player.y < OCEAN_SURFACE + 100) {
+                depthElement.textContent = 'Shallow';
+                diveIndicator.style.display = 'none';
+            } else {
+                depthElement.textContent = 'Deep';
+                diveIndicator.style.display = 'none';
+            }
+        }
+        
+        // Collision detection
+        function checkCollisions() {
+            // Fish collisions - only when underwater
+            if (player.diving) {
+                fish.forEach((f, index) => {
+                    if (player.x < f.x + f.width &&
+                        player.x + player.width > f.x &&
+                        player.y < f.y + f.height &&
+                        player.y + player.height > f.y) {
+                        
+                        fish.splice(index, 1);
+                        foodCollected++;
+                        
+                        if (f.type === 'special') {
+                            score += 25;
+                            createParticleExplosion(f.x, f.y, '#FFD700');
+                        } else {
+                            score += 10;
+                            createParticleExplosion(f.x, f.y, '#FF6B6B');
+                        }
+                        
+                        // Check win condition
+                        if (foodCollected >= WINNING_FOOD_TARGET) {
+                            winGame();
+                            return;
+                        }
+                        
+                        // Create feeding bubbles
+                        for (let i = 0; i < 5; i++) {
+                            createBubble(f.x + Math.random() * 30, f.y + Math.random() * 30);
+                        }
+                    }
+                });
+            }
+            
+            // Plastic collisions
+            plastic.forEach((p, index) => {
+                if (player.x < p.x + p.width &&
+                    player.x + player.width > p.x &&
+                    player.y < p.y + p.height &&
+                    player.y + player.height > p.y) {
+                    
+                    plastic.splice(index, 1);
+                    health--;
+                    createParticleExplosion(p.x, p.y, '#ff4757');
+                    
+                    if (health <= 0) {
+                        endGame();
+                    }
+                }
+            });
+        }
+        
+        // Create particle explosion
+        function createParticleExplosion(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    color: color,
+                    life: 1,
+                    size: Math.random() * 6 + 3
+                });
+            }
+        }
+        
+        // Draw particles
+        function drawParticles() {
+            particles.forEach((particle, index) => {
+                ctx.save();
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+                particle.life -= 0.02;
+                particle.size *= 0.99;
+                
+                if (particle.life <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+        }
+        
+        // Update UI
+        function updateUI() {
+            document.getElementById('food-count').textContent = foodCollected;
+            document.getElementById('score').textContent = score;
+            
+            const heartsContainer = document.getElementById('health-hearts');
+            heartsContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                if (i >= health) {
+                    heart.classList.add('lost');
+                    heart.innerHTML = '💔';
+                } else {
+                    heart.innerHTML = '❤️';
+                }
+                heartsContainer.appendChild(heart);
+            }
+            
+            // Update progress bar color based on progress
+            const progress = foodCollected / WINNING_FOOD_TARGET;
+            const foodCountElement = document.getElementById('food-count');
+            if (progress >= 0.8) {
+                foodCountElement.style.color = '#27ae60'; // Green when close to winning
+            } else if (progress >= 0.5) {
+                foodCountElement.style.color = '#f39c12'; // Orange when halfway
+            } else {
+                foodCountElement.style.color = '#2c3e50'; // Default color
+            }
+        }
+        
+        // Win game
+        function winGame() {
+            gameRunning = false;
+            const gameOverDiv = document.getElementById('game-over');
+            const title = document.getElementById('game-over-title');
+            const message = document.getElementById('game-over-message');
+            
+            title.textContent = '🐣🏆 Mission Accomplished!';
+            message.innerHTML = `
+                <strong>🎉 Congratulations! Your chick is well-fed and healthy! 🎉</strong><br><br>
+                🐟 You successfully collected <strong>${foodCollected}</strong> fish!<br>
+                💪 You avoided plastic pollution and kept your family safe!<br>
+                🌊 <em>Thanks for learning about ocean conservation!</em><br><br>
+                <strong>🦅 You're a master forager! 🦅</strong>
+            `;
+            
+            document.getElementById('final-score').textContent = score;
+            gameOverDiv.style.display = 'block';
+        }
+        
+        // End game
+        function endGame() {
+            gameRunning = false;
+            const gameOverDiv = document.getElementById('game-over');
+            const title = document.getElementById('game-over-title');
+            const message = document.getElementById('game-over-message');
+            
+            if (health <= 0) {
+                title.textContent = '🐣💔 Your Chick is in Danger!';
+                message.innerHTML = `
+                    <strong>The plastic pollution made you too sick to feed your chick!</strong><br><br>
+                    🌊 <em>Did you know?</em> Over 1 million seabirds die annually from plastic pollution.<br>
+                    🦅 Albatrosses often mistake plastic for food, feeding it to their chicks.<br>
+                    🐟 You collected <strong>${foodCollected}</strong>/${WINNING_FOOD_TARGET} fish before getting sick.
+                `;
+            } else {
+                title.textContent = '🐣❤️ Excellent Foraging!';
+                message.innerHTML = `
+                    <strong>You successfully fed your chick while avoiding pollution!</strong><br><br>
+                    🐟 Fish collected: <strong>${foodCollected}</strong>/${WINNING_FOOD_TARGET}<br>
+                    ⭐ You're helping raise awareness about ocean conservation!
+                `;
+            }
+            
+            document.getElementById('final-score').textContent = score;
+            gameOverDiv.style.display = 'block';
+        }
+        
+        // Restart game
+        function restartGame() {
+            gameRunning = true;
+            score = 0;
+            foodCollected = 0;
+            health = 3;
+            gameTime = 0;
+            
+            player.x = 100;
+            player.y = 200;
+            player.vx = 0;
+            player.vy = 0;
+            player.diving = false;
+            
+            fish = [];
+            plastic = [];
+            bubbles = [];
+            particles = [];
+            
+            document.getElementById('game-over').style.display = 'none';
+            updateUI();
+        }
+        
+        // Main game loop
+        function gameLoop() {
+            if (!gameRunning) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            
+            gameTime++;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background layers
+            drawOcean();
+            drawClouds();
+            
+            // Update and draw game objects
+            updatePlayer();
+            spawnFish();
+            spawnPlastic();
+            
+            drawBubbles();
+            drawFish();
+            drawPlastic();
+            drawParticles();
+            drawPlayer();
+            
+            // Check collisions
+            checkCollisions();
+            
+            // Update UI
+            updateUI();
+            
+            // Increase difficulty over time
+            if (gameTime % 1800 === 0) { // Every 30 seconds at 60fps
+                // Slightly increase spawn rates and speeds
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize game
+        function initGame() {
+            initClouds();
+            updateUI();
+            
+            // Start game loop
+            gameLoop();
+        }
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>

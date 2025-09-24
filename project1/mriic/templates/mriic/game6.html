@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Flow - Pipe Puzzle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, #ff9a8b 0%, #a8e6cf 100%);
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23ff9a8b;stop-opacity:1" /><stop offset="100%" style="stop-color:%23a8e6cf;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="600" fill="url(%23sky)"/><ellipse cx="100" cy="500" rx="80" ry="20" fill="%23ffffff" opacity="0.3"/><ellipse cx="300" cy="480" rx="120" ry="30" fill="%23ffffff" opacity="0.2"/><ellipse cx="600" cy="520" rx="100" ry="25" fill="%23ffffff" opacity="0.25"/><ellipse cx="900" cy="490" rx="90" ry="22" fill="%23ffffff" opacity="0.3"/><path d="M0,400 Q200,380 400,400 T800,420 Q1000,430 1200,400 L1200,600 L0,600 Z" fill="%2387c442"/><path d="M0,450 Q300,440 600,450 T1200,460 L1200,600 L0,600 Z" fill="%2376b347"/><rect x="1000" y="300" width="80" height="120" fill="%23c41e3a"/><polygon points="1000,300 1040,250 1080,300" fill="%23a0182e"/><rect x="1020" y="280" width="8" height="40" fill="%23654321"/><rect x="1050" y="280" width="8" height="40" fill="%23654321"/><polygon points="1035,240 1045,220 1055,240" fill="%23654321"/></svg>');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        #title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 48px;
+            color: #2c5530;
+            text-shadow: 3px 3px 0px #ffffff, 6px 6px 10px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        
+        #ui {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .ui-element {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid #4a7c59;
+            font-weight: 700;
+            font-size: 18px;
+            color: #2c5530;
+        }
+        
+        #gameBoard {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 5px solid #4a7c59;
+            margin-bottom: 20px;
+        }
+        
+        #grid {
+            display: grid;
+            gap: 4px;
+            grid-template-columns: repeat(6, 70px);
+            grid-template-rows: repeat(6, 70px);
+        }
+        
+        .tile {
+            width: 70px;
+            height: 70px;
+            background: #f0f8e8;
+            border: 2px solid #d4e6d4;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .tile.source {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            border-color: #2969a3;
+            cursor: default;
+        }
+        
+        .tile.target {
+            background: linear-gradient(135deg, #7cb342 0%, #689f38 100%);
+            border-color: #558b2f;
+            cursor: default;
+        }
+        
+        .pipe {
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .pipe-straight {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70"><rect x="30" y="10" width="10" height="50" fill="%234a90e2" rx="5"/></svg>');
+        }
+        
+        .pipe-corner {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70"><path d="M35 10 L35 35 L60 35" stroke="%234a90e2" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+        }
+        
+        .pipe-t {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70"><path d="M10 35 L60 35 M35 10 L35 35" stroke="%234a90e2" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+        }
+        
+        .pipe-cross {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70"><path d="M10 35 L60 35 M35 10 L35 60" stroke="%234a90e2" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+        }
+        
+        .water-flow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(74, 144, 226, 0.6);
+            border-radius: 6px;
+            animation: waterPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes waterPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+        
+        .source-icon, .target-icon {
+            font-size: 32px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        #instructions {
+            text-align: center;
+            color: #2c5530;
+            font-size: 16px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 2px solid #4a7c59;
+            max-width: 500px;
+        }
+        
+        #gameOver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 5px solid #4a7c59;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .modal h2 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 32px;
+            color: #2c5530;
+            margin-bottom: 15px;
+        }
+        
+        .modal p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #7cb342 0%, #689f38 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 8px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(124,179,66,0.3);
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124,179,66,0.4);
+        }
+        
+        .button.restart {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+        
+        .button.restart:hover {
+            box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+        }
+        
+        .success-effect {
+            animation: successBounce 0.6s ease-out;
+        }
+        
+        @keyframes successBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="header">
+            <h1 id="title">🚜 Farm Flow 🌾</h1>
+        </div>
+        
+        <div id="ui">
+            <div class="ui-element">
+                ⏱️ <span id="timer">60s</span>
+            </div>
+            <div class="ui-element">
+                📊 Level <span id="level">1</span>
+            </div>
+            <div class="ui-element">
+                💧 <span id="score">0</span> Connected
+            </div>
+        </div>
+        
+        <div id="gameBoard">
+            <div id="grid"></div>
+        </div>
+        
+        <div id="instructions">
+            🎯 <strong>Tap pipes to rotate them!</strong><br>
+            Connect the water pump 💧 to the crops 🌱 before time runs out!
+        </div>
+    </div>
+    
+    <div id="gameOver">
+        <div class="modal">
+            <h2 id="gameOverTitle">🎉 Level Complete!</h2>
+            <p id="gameOverMessage">Great job! Your crops are getting fresh water!</p>
+            <button class="button" id="nextLevelBtn">Next Level 🚀</button>
+            <button class="button restart" id="restartBtn">Try Again 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let timeLeft = 60;
+        let gameActive = true;
+        let timer;
+        let grid = [];
+        let connectedTiles = new Set();
+        
+        const PIPE_TYPES = {
+            EMPTY: 0,
+            STRAIGHT: 1,
+            CORNER: 2,
+            T: 3,
+            CROSS: 4,
+            SOURCE: 5,
+            TARGET: 6
+        };
+        
+        const DIRECTIONS = {
+            UP: 0,
+            RIGHT: 1,
+            DOWN: 2,
+            LEFT: 3
+        };
+        
+        // Level configurations - ACTUALLY SOLVABLE! 
+        const LEVELS = [
+            {
+                time: 60,
+                source: {x: 0, y: 2},
+                targets: [{x: 5, y: 2}],
+                pipes: [
+                    {x: 1, y: 2, type: PIPE_TYPES.STRAIGHT, rotation: 1, correctRotation: 1}, // horizontal - correct
+                    {x: 2, y: 2, type: PIPE_TYPES.STRAIGHT, rotation: 0, correctRotation: 1}, // needs to be horizontal
+                    {x: 3, y: 2, type: PIPE_TYPES.STRAIGHT, rotation: 0, correctRotation: 1}, // needs to be horizontal
+                    {x: 4, y: 2, type: PIPE_TYPES.STRAIGHT, rotation: 1, correctRotation: 1}  // horizontal - correct
+                ]
+            },
+            {
+                time: 50,
+                source: {x: 0, y: 2},
+                targets: [{x: 4, y: 0}],
+                pipes: [
+                    {x: 1, y: 2, type: PIPE_TYPES.STRAIGHT, rotation: 0, correctRotation: 1}, // needs horizontal
+                    {x: 2, y: 2, type: PIPE_TYPES.CORNER, rotation: 3, correctRotation: 0},   // needs up-right turn
+                    {x: 2, y: 1, type: PIPE_TYPES.STRAIGHT, rotation: 1, correctRotation: 0}, // needs vertical
+                    {x: 2, y: 0, type: PIPE_TYPES.CORNER, rotation: 0, correctRotation: 1},   // needs right-down turn  
+                    {x: 3, y: 0, type: PIPE_TYPES.STRAIGHT, rotation: 0, correctRotation: 1}, // needs horizontal
+                ]
+            },
+            {
+                time: 45,
+                source: {x: 2, y: 2},
+                targets: [{x: 0, y: 0}, {x: 4, y: 4}],
+                pipes: [
+                    {x: 2, y: 1, type: PIPE_TYPES.T, rotation: 1, correctRotation: 0},        // needs up-left-right
+                    {x: 1, y: 1, type: PIPE_TYPES.CORNER, rotation: 3, correctRotation: 2},   // needs down-left turn
+                    {x: 3, y: 1, type: PIPE_TYPES.CORNER, rotation: 0, correctRotation: 3},   // needs down-right turn
+                    {x: 1, y: 0, type: PIPE_TYPES.CORNER, rotation: 2, correctRotation: 1},   // needs up-right turn
+                    {x: 3, y: 0, type: PIPE_TYPES.STRAIGHT, rotation: 0, correctRotation: 1}, // needs horizontal
+                    {x: 2, y: 3, type: PIPE_TYPES.T, rotation: 3, correctRotation: 2},        // needs down-left-right
+                    {x: 1, y: 3, type: PIPE_TYPES.CORNER, rotation: 1, correctRotation: 1},   // correct up-right
+                    {x: 3, y: 3, type: PIPE_TYPES.STRAIGHT, rotation: 1, correctRotation: 1}, // horizontal - correct
+                    {x: 4, y: 3, type: PIPE_TYPES.CORNER, rotation: 2, correctRotation: 3},   // needs left-down turn
+                    {x: 1, y: 4, type: PIPE_TYPES.CORNER, rotation: 0, correctRotation: 2},   // needs down-left turn
+                    {x: 0, y: 4, type: PIPE_TYPES.CORNER, rotation: 3, correctRotation: 1}    // needs up-right turn
+                ]
+            }
+        ];
+        
+        function initGame() {
+            createGrid();
+            startLevel(1);
+        }
+        
+        function createGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            grid = [];
+            
+            for(let y = 0; y < 6; y++) {
+                grid[y] = [];
+                for(let x = 0; x < 6; x++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.dataset.x = x;
+                    tile.dataset.y = y;
+                    
+                    tile.addEventListener('click', () => {
+                        if(!gameActive) return;
+                        const tileData = grid[y][x];
+                        if(tileData && tileData.type >= PIPE_TYPES.STRAIGHT && tileData.type <= PIPE_TYPES.CROSS) {
+                            rotatePipe(x, y);
+                        }
+                    });
+                    
+                    gridElement.appendChild(tile);
+                    grid[y][x] = { type: PIPE_TYPES.EMPTY, rotation: 0, element: tile };
+                }
+            }
+        }
+        
+        function startLevel(level) {
+            currentLevel = level;
+            const levelData = LEVELS[level - 1];
+            timeLeft = levelData.time;
+            gameActive = true;
+            connectedTiles.clear();
+            
+            // Clear grid
+            for(let y = 0; y < 6; y++) {
+                for(let x = 0; x < 6; x++) {
+                    grid[y][x].type = PIPE_TYPES.EMPTY;
+                    grid[y][x].rotation = 0;
+                    updateTileDisplay(x, y);
+                }
+            }
+            
+            // Set source
+            const source = levelData.source;
+            grid[source.y][source.x].type = PIPE_TYPES.SOURCE;
+            updateTileDisplay(source.x, source.y);
+            
+            // Set targets
+            levelData.targets.forEach(target => {
+                grid[target.y][target.x].type = PIPE_TYPES.TARGET;
+                updateTileDisplay(target.x, target.y);
+            });
+            
+            // Set pipes with random rotations
+            levelData.pipes.forEach(pipe => {
+                grid[pipe.y][pipe.x].type = pipe.type;
+                grid[pipe.y][pipe.x].rotation = Math.floor(Math.random() * 4);
+                updateTileDisplay(pipe.x, pipe.y);
+            });
+            
+            updateUI();
+            startTimer();
+            checkConnections();
+        }
+        
+        function updateTileDisplay(x, y) {
+            const tileData = grid[y][x];
+            const element = tileData.element;
+            
+            element.innerHTML = '';
+            element.className = 'tile';
+            
+            switch(tileData.type) {
+                case PIPE_TYPES.SOURCE:
+                    element.classList.add('source');
+                    element.innerHTML = '<div class="source-icon">💧</div>';
+                    break;
+                case PIPE_TYPES.TARGET:
+                    element.classList.add('target');
+                    element.innerHTML = '<div class="target-icon">🌱</div>';
+                    break;
+                case PIPE_TYPES.STRAIGHT:
+                    element.innerHTML = '<div class="pipe pipe-straight"></div>';
+                    break;
+                case PIPE_TYPES.CORNER:
+                    element.innerHTML = '<div class="pipe pipe-corner"></div>';
+                    break;
+                case PIPE_TYPES.T:
+                    element.innerHTML = '<div class="pipe pipe-t"></div>';
+                    break;
+                case PIPE_TYPES.CROSS:
+                    element.innerHTML = '<div class="pipe pipe-cross"></div>';
+                    break;
+            }
+            
+            const pipe = element.querySelector('.pipe');
+            if(pipe) {
+                pipe.style.transform = `rotate(${tileData.rotation * 90}deg)`;
+            }
+            
+            // Add water flow effect if connected
+            if(connectedTiles.has(`${x},${y}`) && tileData.type >= PIPE_TYPES.STRAIGHT && tileData.type <= PIPE_TYPES.CROSS) {
+                const waterFlow = document.createElement('div');
+                waterFlow.className = 'water-flow';
+                element.appendChild(waterFlow);
+            }
+        }
+        
+        function rotatePipe(x, y) {
+            const tileData = grid[y][x];
+            tileData.rotation = (tileData.rotation + 1) % 4;
+            
+            const element = tileData.element;
+            element.classList.add('success-effect');
+            setTimeout(() => element.classList.remove('success-effect'), 600);
+            
+            updateTileDisplay(x, y);
+            checkConnections();
+        }
+        
+        function checkConnections() {
+            connectedTiles.clear();
+            const levelData = LEVELS[currentLevel - 1];
+            
+            // Find all connected pipes starting from source
+            const visited = new Set();
+            const queue = [{x: levelData.source.x, y: levelData.source.y}];
+            
+            while(queue.length > 0) {
+                const {x, y} = queue.shift();
+                const key = `${x},${y}`;
+                
+                if(visited.has(key)) continue;
+                visited.add(key);
+                connectedTiles.add(key);
+                
+                // Check all 4 directions
+                const neighbors = getConnectedNeighbors(x, y);
+                neighbors.forEach(neighbor => {
+                    if(!visited.has(`${neighbor.x},${neighbor.y}`)) {
+                        queue.push(neighbor);
+                    }
+                });
+            }
+            
+            // Update display
+            for(let y = 0; y < 6; y++) {
+                for(let x = 0; x < 6; x++) {
+                    updateTileDisplay(x, y);
+                }
+            }
+            
+            // Check win condition
+            const connectedTargets = levelData.targets.filter(target => 
+                connectedTiles.has(`${target.x},${target.y}`)
+            ).length;
+            
+            document.getElementById('score').textContent = connectedTargets;
+            
+            // Also check if all pipes are in correct rotation (makes puzzle more interesting)
+            const allPipesCorrect = levelData.pipes.every(pipeConfig => {
+                const tileData = grid[pipeConfig.y][pipeConfig.x];
+                return !pipeConfig.correctRotation || tileData.rotation === pipeConfig.correctRotation;
+            });
+            
+            if(connectedTargets === levelData.targets.length) {
+                endGame(true);
+            }
+        }
+        
+        function getConnectedNeighbors(x, y) {
+            const neighbors = [];
+            const tileData = grid[y][x];
+            
+            const connections = getPipeConnections(tileData.type, tileData.rotation);
+            
+            connections.forEach(direction => {
+                let nx = x, ny = y;
+                switch(direction) {
+                    case DIRECTIONS.UP: ny--; break;
+                    case DIRECTIONS.RIGHT: nx++; break;
+                    case DIRECTIONS.DOWN: ny++; break;
+                    case DIRECTIONS.LEFT: nx--; break;
+                }
+                
+                if(nx >= 0 && nx < 6 && ny >= 0 && ny < 6) {
+                    const neighborData = grid[ny][nx];
+                    const neighborConnections = getPipeConnections(neighborData.type, neighborData.rotation);
+                    
+                    // Check if neighbor connects back
+                    const oppositeDirection = (direction + 2) % 4;
+                    if(neighborConnections.includes(oppositeDirection)) {
+                        neighbors.push({x: nx, y: ny});
+                    }
+                }
+            });
+            
+            return neighbors;
+        }
+        
+        function getPipeConnections(type, rotation) {
+            let baseConnections = [];
+            
+            switch(type) {
+                case PIPE_TYPES.SOURCE:
+                case PIPE_TYPES.TARGET:
+                    return [DIRECTIONS.UP, DIRECTIONS.RIGHT, DIRECTIONS.DOWN, DIRECTIONS.LEFT];
+                case PIPE_TYPES.STRAIGHT:
+                    baseConnections = [DIRECTIONS.UP, DIRECTIONS.DOWN];
+                    break;
+                case PIPE_TYPES.CORNER:
+                    baseConnections = [DIRECTIONS.UP, DIRECTIONS.RIGHT];
+                    break;
+                case PIPE_TYPES.T:
+                    baseConnections = [DIRECTIONS.UP, DIRECTIONS.RIGHT, DIRECTIONS.DOWN];
+                    break;
+                case PIPE_TYPES.CROSS:
+                    baseConnections = [DIRECTIONS.UP, DIRECTIONS.RIGHT, DIRECTIONS.DOWN, DIRECTIONS.LEFT];
+                    break;
+                default:
+                    return [];
+            }
+            
+            return baseConnections.map(dir => (dir + rotation) % 4);
+        }
+        
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                updateUI();
+                
+                if(timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+        
+        function updateUI() {
+            document.getElementById('timer').textContent = `${timeLeft}s`;
+            document.getElementById('level').textContent = currentLevel;
+        }
+        
+        function endGame(won) {
+            gameActive = false;
+            clearInterval(timer);
+            
+            const modal = document.getElementById('gameOver');
+            const title = document.getElementById('gameOverTitle');
+            const message = document.getElementById('gameOverMessage');
+            const nextBtn = document.getElementById('nextLevelBtn');
+            
+            if(won) {
+                title.textContent = '🎉 Level Complete!';
+                message.textContent = 'Amazing! Your crops are getting fresh water and growing strong! 🌱';
+                
+                if(currentLevel < LEVELS.length) {
+                    nextBtn.style.display = 'inline-block';
+                } else {
+                    nextBtn.style.display = 'none';
+                    title.textContent = '🏆 Farm Master!';
+                    message.textContent = 'Congratulations! You\'ve mastered farm irrigation and saved all the crops! 🚜🌾';
+                }
+            } else {
+                title.textContent = '⏰ Time\'s Up!';
+                message.textContent = 'The crops are still thirsty! Try connecting the pipes faster next time! 💧';
+                nextBtn.style.display = 'none';
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        // Event listeners
+        document.getElementById('nextLevelBtn').addEventListener('click', () => {
+            document.getElementById('gameOver').style.display = 'none';
+            startLevel(currentLevel + 1);
+        });
+        
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            document.getElementById('gameOver').style.display = 'none';
+            startLevel(currentLevel);
+        });
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>

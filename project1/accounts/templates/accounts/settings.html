@@ -1,0 +1,42 @@
+{% extends 'mriic/base.html' %}
+{% block title %}Account Settings - EcoVerse{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <form method="post" class="card shadow-sm border-0">
+        <div class="card-header" style="background:#eaf7ec;">
+          <h3 class="mb-0 text-success fw-bold">Account Settings</h3>
+        </div>
+        <div class="card-body">
+          {% csrf_token %}
+          {% if form.errors %}
+            <div class="alert alert-danger">Please correct the errors below.</div>
+          {% endif %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">First name</label>
+              {{ form.first_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Last name</label>
+              {{ form.last_name }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email</label>
+              {{ form.email }}
+            </div>
+          </div>
+          <hr>
+          <p class="mb-1">Need to change your password?</p>
+          <a href="{% url 'password_reset' %}" class="text-success text-decoration-none">Reset password</a>
+        </div>
+        <div class="card-footer bg-light d-flex justify-content-between">
+          <a href="{% url 'profile' %}" class="btn btn-outline-success">Back</a>
+          <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

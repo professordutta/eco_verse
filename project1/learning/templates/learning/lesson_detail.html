@@ -1,0 +1,55 @@
+{% extends 'mriic/base.html' %}
+{% block title %}Lesson - {{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <a href="{% url 'learning:lesson_list' %}" class="text-success text-decoration-none">← Back to lessons</a>
+  <h2 class="mt-3 text-success fw-bold">{{ lesson.title }}</h2>
+  <p class="text-muted">{{ lesson.short_description }}</p>
+  <div class="row g-4 mb-4">
+    {% if lesson.cover_image %}
+    <div class="col-md-4">
+      <img src="{{ lesson.cover_image.url }}" alt="Cover" class="img-fluid rounded border" />
+    </div>
+    {% endif %}
+    <div class="col">
+      {% if lesson.video_url %}
+        <div class="ratio ratio-16x9 mb-3">
+          <iframe src="{{ lesson.video_url }}" title="Video" allowfullscreen loading="lazy"></iframe>
+        </div>
+      {% endif %}
+      {% if lesson.resource_file %}
+        <a href="{{ lesson.resource_file.url }}" class="btn btn-outline-success btn-sm" target="_blank">Download Resource</a>
+      {% endif %}
+      {% if user.is_staff %}
+        <a href="{% url 'learning:lesson_quiz_build' slug=lesson.slug %}" class="btn btn-warning btn-sm ms-2">Build / Edit Quiz</a>
+      {% endif %}
+    </div>
+  </div>
+  {% if lesson.html_content %}
+    <div class="p-4 rounded border bg-white mb-4" style="min-height:200px;">{{ lesson.html_content|safe }}</div>
+  {% else %}
+    <div class="alert alert-info">SCORM package support placeholder – Upload package in admin.</div>
+  {% endif %}
+  <h5 class="mt-4">Quizzes</h5>
+  <ul class="list-group mb-4">
+    {% for quiz in lesson.quizzes.all %}
+      <li class="list-group-item">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <span class="fw-semibold">{{ quiz.title }}</span>
+            <small class="text-muted ms-1">({{ quiz.eco_points }} pts)</small>
+            {% if quiz_attempt and quiz_attempt.quiz_id == quiz.id %}
+              <span class="badge bg-success ms-2">Last: {{ quiz_attempt.score_percent|floatformat:0 }}% ({{ quiz_attempt.earned_points }} pts)</span>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{% url 'learning:quiz_take' quiz.id %}" class="btn btn-sm btn-success">{% if quiz_attempt and quiz_attempt.quiz_id == quiz.id %}Retake{% else %}Take Quiz{% endif %}</a>
+          </div>
+        </div>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No quizzes yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

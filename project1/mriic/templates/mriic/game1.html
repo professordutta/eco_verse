@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ozone Defender</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, #001122 0%, #003366 30%, #006699 70%, #87ceeb 100%);
+        font-family: 'Orbitron', monospace;
+        user-select: none;
+    }
+    
+    canvas {
+        display: block;
+        background: transparent;
+        cursor: crosshair;
+    }
+    
+    #gameUI {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 20px;
+        background: linear-gradient(180deg, rgba(0,0,50,0.8) 0%, transparent 100%);
+    }
+    
+    #leftPanel {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    #restartBtn {
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(45deg, #ff4444, #cc2222);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(255,68,68,0.3);
+        transition: all 0.3s ease;
+        font-family: 'Orbitron', monospace;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    #restartBtn:hover {
+        background: linear-gradient(45deg, #ff6666, #dd3333);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255,68,68,0.4);
+    }
+    
+    #rightPanel {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+    }
+    
+    #scoreBoard, #healthBar, #waveInfo {
+        background: rgba(0,0,0,0.7);
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        font-size: 18px;
+        font-weight: 700;
+        border: 2px solid rgba(135, 206, 235, 0.5);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    #healthBar {
+        background: linear-gradient(90deg, #ff4444 0%, #ffaa44 50%, #44ff44 100%);
+        color: black;
+    }
+    
+    #message {
+        position: fixed;
+        top: 120px;
+        right: 20px;
+        font-size: 24px;
+        font-weight: 900;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        z-index: 15;
+    }
+    
+    #gameOverBox, #startScreen, #victoryScreen {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, rgba(0,0,50,0.95), rgba(0,30,80,0.95));
+        color: white;
+        padding: 40px;
+        font-size: 28px;
+        font-weight: 900;
+        text-align: center;
+        border-radius: 20px;
+        border: 3px solid #87ceeb;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 20;
+        backdrop-filter: blur(10px);
+    }
+    
+    #startScreen {
+        display: block;
+        max-width: 600px;
+    }
+    
+    #gameOverBox, #victoryScreen {
+        display: none;
+    }
+    
+    .game-title {
+        font-size: 48px;
+        background: linear-gradient(45deg, #87ceeb, #ffffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px;
+        text-shadow: none;
+    }
+    
+    .start-btn, .restart-btn {
+        margin-top: 20px;
+        padding: 15px 30px;
+        font-size: 20px;
+        font-weight: 700;
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: 'Orbitron', monospace;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    
+    .start-btn:hover, .restart-btn:hover {
+        background: linear-gradient(45deg, #5CBF60, #55b059);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+    }
+    
+    .controls {
+        margin-top: 20px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #87ceeb;
+    }
+    
+    #defenseLineWarning {
+        position: fixed;
+        bottom: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255,0,0,0.9);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 900;
+        font-size: 18px;
+        display: none;
+        animation: pulse 1s infinite;
+        z-index: 15;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        50% { opacity: 0.7; transform: translateX(-50%) scale(1.05); }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .shake {
+        animation: shake 0.5s ease-in-out;
+    }
+</style>
+</head>
+<body>
+<div id="startScreen">
+    <div class="game-title">OZONE DEFENDER</div>
+    <p style="font-size: 18px; margin: 20px 0;">🌍 Protect Earth's atmosphere from harmful greenhouse gases! 🌍</p>
+    <p style="font-size: 16px; color: #87ceeb; margin-bottom: 10px;">
+        • CO₂ molecules require 2 ozone hits to neutralize<br>
+        • CH₄ molecules require 4 ozone hits to neutralize<br>
+        • Don't let them cross the defense line!
+    </p>
+    <div class="controls">
+        <strong>Controls:</strong><br>
+        A/D or ←/→ - Move drone left/right<br>
+        SPACEBAR - Shoot ozone molecules (O₃)
+    </div>
+    <button class="start-btn" onclick="startGame()">START MISSION</button>
+</div>
+
+<div id="gameUI" style="display: none;">
+    <div id="leftPanel">
+        <button id="restartBtn">Restart Mission</button>
+    </div>
+    <div id="rightPanel">
+        <div id="scoreBoard">Score: 0</div>
+        <div id="healthBar">Defense Integrity: 100%</div>
+        <div id="waveInfo">Wave: 1</div>
+    </div>
+</div>
+
+<div id="message"></div>
+<div id="defenseLineWarning">⚠️ DEFENSE LINE BREACH WARNING! ⚠️</div>
+
+<div id="gameOverBox">
+    <div style="font-size: 40px; margin-bottom: 20px;">🌍 MISSION FAILED 🌍</div>
+    <div style="font-size: 20px; margin-bottom: 20px;">The atmosphere has been compromised!</div>
+    <div id="finalScore" style="color: #87ceeb;"></div>
+    <button class="restart-btn" onclick="restartGame()">RETRY MISSION</button>
+</div>
+
+<div id="victoryScreen">
+    <div style="font-size: 40px; margin-bottom: 20px;">🎉 MISSION ACCOMPLISHED! 🎉</div>
+    <div style="font-size: 20px; margin-bottom: 20px;">You've successfully defended Earth's atmosphere!</div>
+    <div id="victoryScore" style="color: #87ceeb;"></div>
+    <button class="restart-btn" onclick="restartGame()">NEW MISSION</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Game state
+let gameStarted = false;
+let gameOver = false;
+let gameWon = false;
+let score = 0;
+let defenseIntegrity = 100;
+let wave = 1;
+let enemiesSpawned = 0;
+let enemiesPerWave = 5;
+let maxWaves = 5;
+
+// Defense line
+const defenseLineY = canvas.height - 100;
+
+// Drone object
+let drone = {
+    x: canvas.width / 2 - 60,
+    y: canvas.height - 150,
+    width: 120,
+    height: 60,
+    speed: 17,
+    fireRate: 200,
+    lastShot: 0
+};
+
+// Game arrays
+let ozoneBullets = [];
+let enemies = [];
+let explosions = [];
+let particles = []; // Background particles
+let keys = {};
+
+// Messages
+const hitMessages = ['Direct Hit! 💥', 'Nice Shot! 🎯', 'Bullseye! ⚡', 'Perfect! ✨'];
+const destroyMessages = ['Neutralized! ✅', 'Eliminated! 🌟', 'Great Work! 🚀', 'Excellent! 💫'];
+const missMessages = ['Breach! 🚨', 'Critical! ⚠️', 'Danger! 🔥', 'Alert! 💀'];
+
+// Enemy class
+class Enemy {
+    constructor(type) {
+        this.type = type; // 'CO2' or 'CH4'
+        this.x = Math.random() * (canvas.width - 100);
+        this.y = -80;
+        this.width = 80;
+        this.height = 80;
+        this.speed = Math.random() * 1.5 + 0.5 + (wave * 0.2);
+        this.maxHealth = type === 'CO2' ? 2 : 4;
+        this.health = this.maxHealth;
+        this.warningShown = false;
+        this.rotation = 0;
+    }
+    
+    drawMolecule() {
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(this.rotation);
+        
+        if (this.type === 'CO2') {
+            // CO2 - Linear molecule: O=C=O
+            // Carbon (center) - dark gray
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Oxygen atoms - red
+            ctx.fillStyle = '#FF4444';
+            
+            // Left oxygen
+            ctx.beginPath();
+            ctx.arc(-25, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#CC0000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Right oxygen
+            ctx.beginPath();
+            ctx.arc(25, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Double bonds (represented as thick lines)
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-13, -2);
+            ctx.lineTo(-15, -2);
+            ctx.moveTo(-13, 2);
+            ctx.lineTo(-15, 2);
+            ctx.moveTo(13, -2);
+            ctx.lineTo(15, -2);
+            ctx.moveTo(13, 2);
+            ctx.lineTo(15, 2);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 8px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('O', -25, 3);
+            ctx.fillText('C', 0, 3);
+            ctx.fillText('O', 25, 3);
+            
+        } else { // CH4
+            // CH4 - Tetrahedral molecule (represented in 2D)
+            // Carbon (center) - dark gray
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Hydrogen atoms - white/light gray
+            ctx.fillStyle = '#EEEEEE';
+            const hydrogenPositions = [
+                {x: 0, y: -20},    // top
+                {x: 18, y: 10},    // bottom right
+                {x: -18, y: 10},   // bottom left  
+                {x: 0, y: 8}       // front (smaller to show 3D effect)
+            ];
+            
+            // Draw bonds first
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 2;
+            hydrogenPositions.forEach(pos => {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            });
+            
+            // Draw hydrogen atoms
+            hydrogenPositions.forEach((pos, i) => {
+                const radius = i === 3 ? 6 : 8; // front hydrogen smaller
+                ctx.fillStyle = i === 3 ? '#CCCCCC' : '#EEEEEE';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#AAAAAA';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Labels
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 7px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText('H', pos.x, pos.y + 2);
+            });
+            
+            // Carbon label
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 8px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('C', 0, 3);
+        }
+        
+        ctx.restore();
+    }
+    
+    draw() {
+        // Outer glow based on health
+        const healthPercent = this.health / this.maxHealth;
+        const glowColor = healthPercent > 0.5 ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 68, 68, 0.5)';
+        
+        ctx.save();
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 15;
+        this.drawMolecule();
+        ctx.restore();
+        
+        this.drawMolecule();
+        
+        // Health indicator dots
+        const dotSize = 6;
+        const dotSpacing = 10;
+        const startX = this.x + (this.width - (this.maxHealth * dotSpacing - dotSpacing)) / 2;
+        
+        for(let i = 0; i < this.maxHealth; i++) {
+            ctx.fillStyle = i < this.health ? '#4CAF50' : '#333';
+            ctx.beginPath();
+            ctx.arc(startX + i * dotSpacing, this.y - 20, dotSize/2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Molecule type label
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeText(this.type, this.x + this.width/2, this.y + this.height + 15);
+        ctx.fillText(this.type, this.x + this.width/2, this.y + this.height + 15);
+    }
+    
+    update() {
+        this.y += this.speed;
+        this.rotation += 0.02; // Slow rotation for visual effect
+        
+        // Show warning when near defense line
+        if (this.y > defenseLineY - 100 && !this.warningShown) {
+            this.warningShown = true;
+            document.getElementById('defenseLineWarning').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('defenseLineWarning').style.display = 'none';
+            }, 2000);
+        }
+        
+        this.draw();
+        
+        // Check if crossed defense line
+        if (this.y > defenseLineY) {
+            return true; // Breached
+        }
+        return false;
+    }
+    
+    hit() {
+        this.health--;
+        createHitEffect(this.x + this.width/2, this.y + this.height/2);
+        
+        if (this.health <= 0) {
+            createExplosion(this.x + this.width/2, this.y + this.height/2, this.type === 'CO2' ? '#FF4444' : '#EEEEEE');
+            score += this.type === 'CO2' ? 20 : 40;
+            showMessage(destroyMessages[Math.floor(Math.random() * destroyMessages.length)], '#4CAF50');
+            return true; // Destroyed
+        } else {
+            score += 5;
+            showMessage(hitMessages[Math.floor(Math.random() * hitMessages.length)], '#FFA500');
+            return false; // Still alive
+        }
+    }
+}
+
+// Ozone bullet class
+class OzoneBullet {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 16;
+        this.height = 20;
+        this.speed = 12;
+        this.rotation = 0;
+    }
+    
+    draw() {
+        const centerX = this.x;
+        const centerY = this.y;
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(this.rotation);
+        
+        // O3 - Bent molecule structure
+        // Central oxygen - larger
+        ctx.fillStyle = '#87CEEB';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Terminal oxygens - smaller
+        ctx.fillStyle = '#B0E0E6';
+        
+        // Left oxygen (at angle)
+        ctx.beginPath();
+        ctx.arc(-10, -8, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Right oxygen (at angle)
+        ctx.beginPath();
+        ctx.arc(10, -8, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Bonds
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-3, -3);
+        ctx.lineTo(-7, -5);
+        ctx.moveTo(3, -3);
+        ctx.lineTo(7, -5);
+        ctx.stroke();
+        
+        // Glow effect
+        ctx.shadowColor = '#87CEEB';
+        ctx.shadowBlur = 10;
+        
+        // Labels
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 6px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.fillText('O', -10, -5);
+        ctx.fillText('O', 0, 3);
+        ctx.fillText('O', 10, -5);
+        
+        ctx.restore();
+    }
+    
+    update() {
+        this.y -= this.speed;
+        this.rotation += 0.1; // Spinning effect
+        this.draw();
+        return this.y < -30; // Remove if off screen
+    }
+}
+
+// Explosion effect
+class Explosion {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.particles = [];
+        this.life = 30;
+        
+        // Create explosion particles
+        for(let i = 0; i < 15; i++) {
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 0.5) * 12,
+                life: 40,
+                size: Math.random() * 10 + 6
+            });
+        }
+    }
+    
+    update() {
+        this.life--;
+        
+        this.particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            p.vx *= 0.95;
+            p.vy *= 0.95;
+            
+            const alpha = p.life / 40;
+            ctx.fillStyle = this.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        return this.life <= 0;
+    }
+}
+
+// Hit effect
+function createHitEffect(x, y) {
+    for(let i = 0; i < 8; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6,
+            life: 25,
+            size: Math.random() * 5 + 3,
+            color: '#FFD700'
+        });
+    }
+}
+
+function createExplosion(x, y, color) {
+    explosions.push(new Explosion(x, y, color));
+}
+
+// Background particles
+function createBackgroundParticles() {
+    if (particles.length < 50) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height + 10,
+            vx: 0,
+            vy: -Math.random() * 2 - 1,
+            life: 200,
+            size: Math.random() * 2 + 1,
+            color: 'rgba(135, 206, 235, 0.3)'
+        });
+    }
+}
+
+// Event listeners
+document.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.code === 'Space' && gameStarted && !gameOver) {
+        e.preventDefault();
+        shootOzone();
+    }
+});
+
+document.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+function shootOzone() {
+    const now = Date.now();
+    if (now - drone.lastShot > drone.fireRate) {
+        ozoneBullets.push(new OzoneBullet(drone.x + drone.width/2, drone.y));
+        drone.lastShot = now;
+    }
+}
+
+function moveDrone() {
+    if ((keys['a'] || keys['arrowleft']) && drone.x > 0) {
+        drone.x -= drone.speed;
+    }
+    if ((keys['d'] || keys['arrowright']) && drone.x + drone.width < canvas.width) {
+        drone.x += drone.speed;
+    }
+}
+
+function spawnEnemy() {
+    if (enemiesSpawned < enemiesPerWave && enemies.length < 6) {
+        const type = Math.random() < 0.6 ? 'CO2' : 'CH4';
+        enemies.push(new Enemy(type));
+        enemiesSpawned++;
+    }
+}
+
+function checkCollisions() {
+    // Check ozone bullet vs enemy collisions
+    for (let i = ozoneBullets.length - 1; i >= 0; i--) {
+        const bullet = ozoneBullets[i];
+        
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            const enemy = enemies[j];
+            
+            if (bullet.x < enemy.x + enemy.width &&
+                bullet.x + bullet.width > enemy.x &&
+                bullet.y < enemy.y + enemy.height &&
+                bullet.y + bullet.height > enemy.y) {
+                
+                // Hit detected
+                ozoneBullets.splice(i, 1);
+                
+                if (enemy.hit()) {
+                    enemies.splice(j, 1);
+                }
+                break;
+            }
+        }
+    }
+}
+
+function updateGame() {
+    // Update ozone bullets
+    for (let i = ozoneBullets.length - 1; i >= 0; i--) {
+        if (ozoneBullets[i].update()) {
+            ozoneBullets.splice(i, 1);
+        }
+    }
+    
+    // Update enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        if (enemies[i].update()) {
+            // Enemy breached defense line
+            enemies.splice(i, 1);
+            defenseIntegrity -= 20;
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+            showMessage(missMessages[Math.floor(Math.random() * missMessages.length)], '#FF4444');
+            
+            if (defenseIntegrity <= 0) {
+                endGame();
+                return;
+            }
+        }
+    }
+    
+    // Update explosions
+    for (let i = explosions.length - 1; i >= 0; i--) {
+        if (explosions[i].update()) {
+            explosions.splice(i, 1);
+        }
+    }
+    
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+        }
+        
+        const alpha = p.life / 200;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // Check wave completion
+    if (enemiesSpawned >= enemiesPerWave && enemies.length === 0) {
+        wave++;
+        enemiesSpawned = 0;
+        enemiesPerWave += 2;
+        
+        if (wave > maxWaves) {
+            winGame();
+            return;
+        }
+        
+        showMessage(`Wave ${wave} Incoming! 🌊`, '#87CEEB');
+    }
+    
+    // Spawn enemies
+    if (Math.random() < 0.02) {
+        spawnEnemy();
+    }
+    
+    // Check collisions
+    checkCollisions();
+}
+
+function drawDrone() {
+    // Drone body
+    ctx.fillStyle = '#4A4A4A';
+    ctx.fillRect(drone.x, drone.y, drone.width, drone.height);
+    
+    // Drone details
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(drone.x + 10, drone.y + 10, drone.width - 20, drone.height - 20);
+    
+    // Propellers
+    ctx.fillStyle = '#333';
+    ctx.fillRect(drone.x - 10, drone.y + 10, 20, 8);
+    ctx.fillRect(drone.x + drone.width - 10, drone.y + 10, 20, 8);
+    
+    // Ozone cannon
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(drone.x + drone.width/2 - 5, drone.y - 15, 10, 20);
+    
+    // Drone label
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Orbitron';
+    ctx.textAlign = 'center';
+    ctx.fillText('O₃', drone.x + drone.width/2, drone.y + drone.height/2 + 4);
+}
+
+function drawDefenseLine() {
+    // Defense line
+    ctx.strokeStyle = defenseIntegrity > 50 ? '#4CAF50' : '#FF4444';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([10, 5]);
+    ctx.beginPath();
+    ctx.moveTo(0, defenseLineY);
+    ctx.lineTo(canvas.width, defenseLineY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Defense line label
+    ctx.fillStyle = defenseIntegrity > 50 ? '#4CAF50' : '#FF4444';
+    ctx.font = 'bold 16px Orbitron';
+    ctx.textAlign = 'center';
+    ctx.fillText('DEFENSE LINE', canvas.width/2, defenseLineY + 25);
+}
+
+function showMessage(text, color) {
+    const messageDiv = document.getElementById('message');
+    messageDiv.innerText = text;
+    messageDiv.style.color = color;
+    setTimeout(() => {
+        messageDiv.innerText = '';
+    }, 2000);
+}
+
+function updateUI() {
+    document.getElementById('scoreBoard').innerText = `Score: ${score}`;
+    document.getElementById('healthBar').innerText = `Defense Integrity: ${defenseIntegrity}%`;
+    document.getElementById('waveInfo').innerText = `Wave: ${wave}`;
+}
+
+function gameLoop() {
+    if (!gameStarted || gameOver || gameWon) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    createBackgroundParticles();
+    updateGame();
+    
+    drawDefenseLine();
+    moveDrone();
+    drawDrone();
+    
+    updateUI();
+    requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameUI').style.display = 'flex';
+    gameStarted = true;
+    gameLoop();
+}
+
+function endGame() {
+    gameOver = true;
+    document.getElementById('finalScore').innerText = `Final Score: ${score}`;
+    document.getElementById('gameOverBox').style.display = 'block';
+}
+
+function winGame() {
+    gameWon = true;
+    document.getElementById('victoryScore').innerText = `Final Score: ${score}`;
+    document.getElementById('victoryScreen').style.display = 'block';
+}
+
+function restartGame() {
+    // Reset game state
+    gameStarted = false;
+    gameOver = false;
+    gameWon = false;
+    score = 0;
+    defenseIntegrity = 100;
+    wave = 1;
+    enemiesSpawned = 0;
+    enemiesPerWave = 5;
+    
+    // Reset drone position
+    drone.x = canvas.width / 2 - 60;
+    drone.lastShot = 0;
+    
+    // Clear arrays
+    ozoneBullets = [];
+    enemies = [];
+    explosions = [];
+    particles = [];
+    
+    // Hide game over screens
+    document.getElementById('gameOverBox').style.display = 'none';
+    document.getElementById('victoryScreen').style.display = 'none';
+    document.getElementById('gameUI').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'block';
+}
+
+// Initialize the game
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drone.x = Math.min(drone.x, canvas.width - drone.width);
+});
+</script>
+</body>
+</html>
