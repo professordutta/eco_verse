@@ -23,6 +23,7 @@ from mriic import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
+    path('about/', views.about, name='about'),
     path('game1/', views.game1, name='game1'),
     path('game2/', views.game2, name='game2'),
     path('games/', views.games, name='games'),
@@ -32,4 +33,5 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / 'static')
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

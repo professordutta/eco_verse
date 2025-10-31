@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soap Splash!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            .hand-background {
+                width: 300px;
+                height: 300px;
+            }
+            .palm {
+                width: 150px;
+                height: 190px;
+            }
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #ff6b9d;
+            font-size: 3em;
+            text-shadow: 3px 3px 0 #fff, 6px 6px 0 #ffd93d;
+            margin-bottom: 10px;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            color: #667eea;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            color: #ff6b9d;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+        }
+
+        .game-area {
+            background: linear-gradient(180deg, #fff9e6 0%, #ffe6f0 100%);
+            border-radius: 15px;
+            height: 500px;
+            position: relative;
+            cursor: crosshair;
+            border: 5px solid #fff;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .germ {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            animation: float 2s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        .germ:hover {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(10deg); }
+        }
+
+        .germ-body {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: relative;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .germ-eye {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            top: 20px;
+        }
+
+        .germ-eye-left { left: 15px; }
+        .germ-eye-right { right: 15px; }
+
+        .germ-pupil {
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+        }
+
+        .germ-mouth {
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            border: 3px solid #333;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .germ-spike {
+            position: absolute;
+            width: 8px;
+            height: 15px;
+            border-radius: 50%;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(135,206,250,0.6));
+            border: 3px solid rgba(135,206,250,0.8);
+            box-shadow: 0 0 20px rgba(135,206,250,0.6), inset -10px -10px 20px rgba(255,255,255,0.4);
+            pointer-events: none;
+            animation: bubble-pop 0.6s ease-out forwards;
+            z-index: 2;
+        }
+
+        @keyframes bubble-pop {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .start-screen, .end-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .start-button, .restart-button {
+            background: linear-gradient(135deg, #ff6b9d, #ffd93d);
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 20px 50px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255,107,157,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+        }
+
+        .start-button:hover, .restart-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255,107,157,0.6);
+        }
+
+        .start-button:active, .restart-button:active {
+            transform: translateY(0);
+        }
+
+        .end-message {
+            font-size: 2.5em;
+            color: #ff6b9d;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 #ffd93d;
+            text-align: center;
+        }
+
+        .final-score {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .instructions {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .instruction-list {
+            text-align: left;
+            margin: 20px auto;
+            padding: 20px 30px;
+            background: rgba(102,126,234,0.1);
+            border-radius: 15px;
+            border: 2px solid rgba(102,126,234,0.3);
+        }
+
+        .instruction-list li {
+            margin: 10px 0;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .win-condition {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,184,148,0.3);
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .game-area {
+                height: 400px;
+            }
+            .germ {
+                width: 50px;
+                height: 50px;
+            }
+            .germ-body {
+                width: 50px;
+                height: 50px;
+            }
+            .hand-background {
+                width: 300px;
+                height: 300px;
+            }
+            .palm {
+                width: 150px;
+                height: 190px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🧼 Soap Splash! 💦</h1>
+        </div>
+        
+        <div class="info-bar">
+            <div class="info-item">
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Time</div>
+                <div class="info-value" id="timer">30</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="start-screen" id="startScreen">
+                <h2 style="color: #ff6b9d; font-size: 2em; margin-bottom: 20px;">How to Play</h2>
+                <div class="instruction-list">
+                    <ul style="list-style: none; padding: 0;">
+                        <li>🦠 Germs will appear and move around the screen</li>
+                        <li>👆 Click or tap on germs to splash them with soap</li>
+                        <li>💯 Each germ gives you 10 points</li>
+                        <li>⏱️ You have 30 seconds to score as much as you can</li>
+                    </ul>
+                </div>
+                <div class="win-condition">
+                    🏆 Score 300+ points to WIN! 🏆
+                </div>
+                <button class="start-button" id="startButton" style="margin-top: 30px;">Start Game</button>
+            </div>
+            
+            <div class="end-screen hidden" id="endScreen">
+                <div class="end-message" id="endMessage">You're a Clean Hands Hero!</div>
+                <div class="final-score" id="finalScore">Final Score: 0</div>
+                <button class="restart-button" id="restartButton">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const startScreen = document.getElementById('startScreen');
+        const endScreen = document.getElementById('endScreen');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const endMessage = document.getElementById('endMessage');
+        const finalScore = document.getElementById('finalScore');
+
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let timerInterval;
+        let germs = [];
+
+        const germColors = [
+            '#7bed9f', '#ff6b81', '#ffd93d', '#6c5ce7', 
+            '#fd79a8', '#a29bfe', '#00b894', '#fdcb6e'
+        ];
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playPopSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        function createGerm() {
+            const germ = document.createElement('div');
+            germ.className = 'germ';
+            
+            const maxX = gameArea.clientWidth - 70;
+            const maxY = gameArea.clientHeight - 70;
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+            
+            germ.style.left = x + 'px';
+            germ.style.top = y + 'px';
+            
+            const color = germColors[Math.floor(Math.random() * germColors.length)];
+            
+            germ.innerHTML = `
+                <div class="germ-body" style="background: ${color};">
+                    <div class="germ-spike" style="background: ${color}; top: -5px; left: 10px;"></div>
+                    <div class="germ-spike" style="background: ${color}; top: -5px; right: 10px;"></div>
+                    <div class="germ-spike" style="background: ${color}; bottom: -5px; left: 15px;"></div>
+                    <div class="germ-spike" style="background: ${color}; bottom: -5px; right: 15px;"></div>
+                    <div class="germ-spike" style="background: ${color}; left: -5px; top: 20px;"></div>
+                    <div class="germ-spike" style="background: ${color}; right: -5px; top: 20px;"></div>
+                    <div class="germ-eye germ-eye-left">
+                        <div class="germ-pupil"></div>
+                    </div>
+                    <div class="germ-eye germ-eye-right">
+                        <div class="germ-pupil"></div>
+                    </div>
+                    <div class="germ-mouth"></div>
+                </div>
+            `;
+            
+            germ.addEventListener('click', () => splashGerm(germ));
+            
+            gameArea.appendChild(germ);
+            germs.push(germ);
+            
+            moveGerm(germ);
+        }
+
+        function moveGerm(germ) {
+            if (!gameActive) return;
+            
+            const maxX = gameArea.clientWidth - 70;
+            const maxY = gameArea.clientHeight - 70;
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            
+            germ.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
+            germ.style.left = newX + 'px';
+            germ.style.top = newY + 'px';
+            
+            if (gameActive) {
+                setTimeout(() => moveGerm(germ), 2000);
+            }
+        }
+
+        function splashGerm(germ) {
+            if (!gameActive) return;
+            
+            playPopSound();
+            
+            const rect = germ.getBoundingClientRect();
+            const gameRect = gameArea.getBoundingClientRect();
+            const x = rect.left - gameRect.left + rect.width / 2;
+            const y = rect.top - gameRect.top + rect.height / 2;
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => createBubble(x, y), i * 50);
+            }
+            
+            germ.remove();
+            germs = germs.filter(g => g !== germ);
+            
+            score += 10;
+            scoreDisplay.textContent = score;
+            
+            if (gameActive) {
+                createGerm();
+            }
+        }
+
+        function createBubble(x, y) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            
+            const size = 30 + Math.random() * 40;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            
+            const offsetX = (Math.random() - 0.5) * 50;
+            const offsetY = (Math.random() - 0.5) * 50;
+            
+            bubble.style.left = (x + offsetX) + 'px';
+            bubble.style.top = (y + offsetY) + 'px';
+            
+            gameArea.appendChild(bubble);
+            
+            setTimeout(() => bubble.remove(), 600);
+        }
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            gameActive = true;
+            germs = [];
+            
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+            
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            
+            for (let i = 0; i < 5; i++) {
+                createGerm();
+            }
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            germs.forEach(germ => germ.remove());
+            germs = [];
+            
+            finalScore.textContent = `Final Score: ${score}`;
+            
+            // Win/Lose conditions: Need at least 300 points to win
+            if (score >= 300) {
+                endMessage.textContent = "🎉 YOU WIN! Clean Hands Hero! 🎉";
+                endMessage.style.color = "#00b894";
+            } else {
+                endMessage.textContent = "😔 YOU LOSE! Try Again! 😔";
+                endMessage.style.color = "#ff6b81";
+            }
+            
+            endScreen.classList.remove('hidden');
+        }
+
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>

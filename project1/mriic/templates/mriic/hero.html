@@ -1,28 +1,876 @@
 <!-- Hero Section -->
-<section class="hero d-flex align-items-center text-center text-white position-relative"
-        style="background: url('https://cdn.pixabay.com/photo/2015/12/23/22/36/minecraft-1106252_1280.jpg') 
-                center/cover no-repeat; min-height: 90vh;">
-        <div class="container">
-            <h1 class="display-1 fw-bold mb-3">EcoVerse</h1>
-            <p class="lead fs-3 mb-4">Play • Evolve • Sustain</p>
-            <p class="fs-5 mb-5">Embark on a next-gen adventure where strategy meets sustainability.</p>
-            <a href="#play" class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow">
-            Start Your Journey
-            </a>
-        </div>
-        </section>
-
-        <!-- Light Green Overlay Styles -->
-        <style>
+<section class="hero d-flex align-items-center text-center text-white position-relative overflow-hidden" style="min-height: 100vh; background: linear-gradient(135deg, #0a3a2e 0%, #1a5f4a 50%, #2d6a4f 100%);">
+    <style>
+        .hero {
+            position: relative;
+        }
+        
+        .hero-bg-blur {
+            position: absolute;
+            inset: 0;
+            background: url('https://cdn.pixabay.com/photo/2015/12/23/22/36/minecraft-1106252_1280.jpg') center/cover no-repeat;
+            filter: blur(12px) brightness(0.5);
+            z-index: 0;
+        }
+        
         .hero::before {
             content: "";
             position: absolute;
             inset: 0;
-            /* Light green overlay with slight transparency */
-            background: rgba(144, 238, 144, 0.45); /* lightgreen with 45% opacity */
-        }
-        .hero > .container {
-            position: relative;
+            background: radial-gradient(circle at 20% 50%, rgba(45, 106, 79, 0.4) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 50%, rgba(137, 201, 151, 0.2) 0%, transparent 50%),
+                        linear-gradient(135deg, rgba(10, 58, 46, 0.7) 0%, rgba(26, 95, 74, 0.7) 50%, rgba(45, 106, 79, 0.7) 100%);
             z-index: 1;
         }
-        </style>
+        
+        .hero-bg-animation {
+            position: absolute;
+            top: 50%;
+            right: 5%;
+            transform: translateY(-50%);
+            opacity: 0.85;
+            z-index: 2;
+            pointer-events: none;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 15px 35px rgba(45, 106, 79, 0.25));
+            animation: floatAnimation 6s ease-in-out infinite;
+        }
+        
+        @keyframes floatAnimation {
+            0%, 100% { transform: translateY(-50%) translateY(0px); }
+            50% { transform: translateY(-50%) translateY(-15px); }
+        }
+        
+        .hero-bg-animation dotlottie-wc {
+            width: 100% !important;
+            height: 100% !important;
+            filter: brightness(1.05) contrast(1.05);
+        }
+        
+        @media (max-width: 1200px) {
+            .hero-bg-animation {
+                width: 350px;
+                height: 350px;
+                right: 0;
+                opacity: 0.8;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-bg-animation {
+                position: absolute;
+                top: auto;
+                bottom: -100px;
+                right: 50%;
+                transform: translateX(50%);
+                opacity: 0.5;
+                width: 300px;
+                height: 300px;
+                animation: none;
+            }
+        }
+        
+        .hero > .container {
+            position: relative;
+            z-index: 3;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #ffffff 0%, #e0f7e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1.25rem, 4vw, 2rem);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #e0f7e0;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            letter-spacing: 2px;
+        }
+        
+        .hero-description {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: #c8e6c8;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-btn-container {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+        
+        .hero-btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .hero-btn-primary {
+            background: linear-gradient(135deg, #52b788 0%, #2d6a4f 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(45, 106, 79, 0.3);
+        }
+        
+        .hero-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(45, 106, 79, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .hero-btn-primary:active {
+            transform: translateY(-1px);
+        }
+        
+        .hero-btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .hero-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .hero-scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+        
+        .scroll-icon {
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 8px;
+            position: relative;
+        }
+        
+        .scroll-icon::after {
+            content: '';
+            width: 3px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 2px;
+            animation: scroll 1.5s infinite;
+        }
+        
+        @keyframes scroll {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(15px); }
+        }
+    </style>
+    
+    <!-- Blurred Background Image -->
+    <div class="hero-bg-blur"></div>
+    
+    <!-- Background Animation -->
+    <div class="hero-bg-animation">
+        <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module"></script>
+        <dotlottie-wc
+            src="https://lottie.host/802bd7a4-4b55-4388-9553-985242d7bfd3/FosIsf7c0z.lottie"
+            autoplay
+            loop
+        ></dotlottie-wc>
+    </div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 col-xl-8 mx-auto">
+                <h1 class="hero-title">
+                    <i class="bi bi-leaf-fill" style="margin-right: 0.5rem;"></i>EcoVerse
+                </h1>
+                <p class="hero-subtitle">Play • Evolve • Sustain</p>
+                <p class="hero-description">
+                    Embark on an interactive adventure where gaming meets environmental education. Learn, earn rewards, and make a real difference in protecting our planet.
+                </p>
+                <div class="hero-btn-container">
+                    <a href="/accounts/signup" class="hero-btn hero-btn-primary">
+                        <i class="bi bi-play-circle-fill"></i>Start Journey
+                    </a>
+                    <a href="{% url 'games' %}" class="hero-btn hero-btn-secondary">
+                        <i class="bi bi-joystick"></i>Explore Games
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="hero-scroll-indicator">
+        <div class="scroll-icon"></div>
+    </div>
+</section>
+
+<style>
+    .wave-divider {
+        position: relative;
+        margin-top: -1px;
+        z-index: 10;
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+</style>
+
+<svg class="wave-divider" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="waveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#2d6a4f;stop-opacity:0.2" />
+            <stop offset="100%" style="stop-color:#eaf7ec;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M0,30 Q360,0 720,30 T1440,30 L1440,100 L0,100 Z" fill="url(#waveGradient)"/>
+    <path d="M0,50 Q360,20 720,50 T1440,50 L1440,100 L0,100 Z" fill="#eaf7ec" opacity="0.6"/>
+</svg>
+
+<!-- Features Animation Section -->
+<section class="py-5 bg-gradient-light position-relative overflow-hidden">
+    <style>
+        .bg-gradient-light {
+            background: linear-gradient(135deg, #f8f9fa 0%, #eaf7ec 100%);
+        }
+        
+        .animation-section {
+            padding: 80px 20px;
+            position: relative;
+        }
+        
+        .animation-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            margin: 0 auto;
+        }
+        
+        .animation-content {
+            flex: 1;
+            min-width: 280px;
+            animation: slideInLeft 0.8s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .animation-visual {
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: slideInRight 0.8s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .lottie-wrapper {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(45, 106, 79, 0.12);
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(45, 106, 79, 0.08);
+        }
+        
+        .lottie-wrapper:hover {
+            box-shadow: 0 20px 60px rgba(45, 106, 79, 0.18);
+            transform: translateY(-8px);
+            border-color: rgba(45, 106, 79, 0.15);
+        }
+        
+        .animation-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--eco-green);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .animation-subtitle {
+            font-size: 1.15rem;
+            color: #555;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            padding-left: 0;
+        }
+        
+        .feature-item:hover {
+            padding-left: 10px;
+            color: var(--eco-green);
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--eco-green) 0%, #52b788 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .animation-container {
+                flex-direction: column;
+                gap: 40px;
+            }
+            
+            .animation-title {
+                font-size: 2rem;
+            }
+            
+            .animation-section {
+                padding: 60px 20px;
+            }
+            
+            dotlottie-wc {
+                width: 280px !important;
+                height: 280px !important;
+            }
+            
+            .lottie-wrapper {
+                padding: 30px;
+            }
+        }
+        
+        dotlottie-wc {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .decor-shape {
+            position: absolute;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+        
+        .decor-shape-1 {
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--eco-green) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .decor-shape-2 {
+            bottom: -150px;
+            left: -150px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--eco-light-green) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+    </style>
+    
+    <div class="decor-shape decor-shape-1"></div>
+    <div class="decor-shape decor-shape-2"></div>
+    
+    <div class="container animation-section position-relative" style="z-index: 2;">
+        <div class="animation-container">
+            <div class="animation-content">
+                <h2 class="animation-title">
+                    <i class="bi bi-lightbulb-fill"></i>Start Your Eco Journey
+                </h2>
+                <p class="animation-subtitle">
+                    Discover engaging lessons, take exciting challenges, and track your environmental impact in real-time while building a sustainable future.
+                </p>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="bi bi-book"></i></div>
+                        <span>Interactive lessons for all ages</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="bi bi-trophy"></i></div>
+                        <span>Earn rewards & achievements</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="bi bi-graph-up"></i></div>
+                        <span>Track environmental progress</span>
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon"><i class="bi bi-people"></i></div>
+                        <span>Join eco-warrior community</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="animation-visual">
+                <div class="lottie-wrapper">
+                    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module"></script>
+                    <dotlottie-wc src="https://lottie.host/7af71b85-f961-4e91-af9d-a52786ea4da0/vpvWVfOwVX.lottie" style="width: 380px; height: 380px;" autoplay loop></dotlottie-wc>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Curved Divider before Features Section -->
+<svg class="wave-divider" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#eaf7ec;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M0,30 Q360,0 720,30 T1440,30 L1440,100 L0,100 Z" fill="url(#waveGradient2)"/>
+    <path d="M0,50 Q360,20 720,50 T1440,50 L1440,100 L0,100 Z" fill="#ffffff" opacity="0.5"/>
+</svg>
+
+<!-- Hero Features Section -->
+<section class="hero-features-section py-5 position-relative overflow-hidden">
+    <style>
+        .hero-features-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f5fdf9 100%);
+            padding: 80px 20px;
+            position: relative;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .features-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .features-header h2 {
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            font-weight: 800;
+            color: var(--eco-green);
+            margin-bottom: 1rem;
+        }
+
+        .features-header p {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-box {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(45, 106, 79, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        .feature-box:nth-child(1) { animation-delay: 0.1s; }
+        .feature-box:nth-child(2) { animation-delay: 0.2s; }
+        .feature-box:nth-child(3) { animation-delay: 0.3s; }
+        .feature-box:nth-child(4) { animation-delay: 0.4s; }
+
+        .feature-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--eco-green) 0%, #52b788 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-box:hover::before {
+            opacity: 1;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(45, 106, 79, 0.15);
+            border-color: rgba(45, 106, 79, 0.1);
+        }
+
+        .feature-icon-box {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--eco-green) 0%, #52b788 100%);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px rgba(45, 106, 79, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover .feature-icon-box {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .feature-desc {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-features-section {
+                padding: 60px 20px;
+            }
+
+            .features-header h2 {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .feature-box {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+
+    <div class="features-container">
+        <div class="features-header">
+            <h2><i class="bi bi-sparkles"></i>Why Choose EcoVerse?</h2>
+            <p>Experience the perfect blend of education and entertainment designed to inspire environmental action</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-box">
+                <div class="feature-icon-box"><i class="bi bi-controller"></i></div>
+                <h3 class="feature-title">Engaging Gameplay</h3>
+                <p class="feature-desc">7 immersive games designed to make learning about environmental challenges fun and addictive for all ages.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-box"><i class="bi bi-award"></i></div>
+                <h3 class="feature-title">Earn Rewards</h3>
+                <p class="feature-desc">Complete challenges, unlock achievements, and climb the leaderboard while making real environmental impact.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-box"><i class="bi bi-graph-up"></i></div>
+                <h3 class="feature-title">Track Progress</h3>
+                <p class="feature-desc">Monitor your environmental learning journey with detailed analytics and personalized recommendations.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-box"><i class="bi bi-people"></i></div>
+                <h3 class="feature-title">Community Impact</h3>
+                <p class="feature-desc">Join thousands of eco-warriors and collaborate on global environmental missions to drive real change.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Curved Divider before CTA Section -->
+<svg class="wave-divider" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="waveGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#f5fdf9;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2d6a4f;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M0,20 Q360,0 720,20 T1440,20 L1440,60 L0,60 Z" fill="url(#waveGradient3)"/>
+</svg>
+
+<!-- CTA Section with Curve Border -->
+<section class="hero-cta-section position-relative overflow-hidden">
+    <style>
+        .hero-cta-section {
+            background: linear-gradient(135deg, var(--eco-green) 0%, #1f4d38 50%, #0a3a2e 100%);
+            color: white;
+            padding: 100px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(82, 183, 136, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 50%, rgba(137, 201, 151, 0.1) 0%, transparent 50%);
+            z-index: 1;
+        }
+
+        .cta-content-wrapper {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .cta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: #e0f7e0;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-title {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            background: linear-gradient(to right, #ffffff 0%, #e0f7e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cta-description {
+            font-size: 1.15rem;
+            color: #c8e6c8;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn-primary {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f8f4 100%);
+            color: var(--eco-green);
+            padding: 1.1rem 3rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+            color: var(--eco-green);
+            text-decoration: none;
+        }
+
+        .cta-btn-primary:active {
+            transform: translateY(-2px);
+        }
+
+        .cta-btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 1.1rem 3rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-4px);
+            color: white;
+            text-decoration: none;
+        }
+
+        .cta-btn-secondary:active {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .hero-cta-section {
+                padding: 60px 20px;
+            }
+
+            .cta-title {
+                font-size: 2rem;
+            }
+
+            .cta-description {
+                font-size: 1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .cta-btn-primary,
+            .cta-btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+
+    <div class="cta-content-wrapper">
+        <div class="cta-badge">
+            <i class="bi bi-lightning-fill"></i>Limited Time Offer
+        </div>
+        <h2 class="cta-title">Ready to Change the World?</h2>
+        <p class="cta-description">
+            Join thousands of eco-warriors in an epic mission to save our planet. Learn, play, and make a real environmental impact while having fun!
+        </p>
+        <div class="cta-buttons">
+            <a href="/accounts/signup" class="cta-btn-primary">
+                <i class="bi bi-play-circle-fill"></i>Get Started Free
+            </a>
+            <a href="{% url 'games' %}" class="cta-btn-secondary">
+                <i class="bi bi-joystick"></i>Explore Games
+            </a>
+        </div>
+    </div>
+</section>

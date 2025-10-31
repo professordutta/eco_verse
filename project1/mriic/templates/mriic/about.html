@@ -1,0 +1,662 @@
+{% extends 'mriic/base.html' %}
+{% load static %}
+{% block title %}About EcoVerse | Making Environmental Impact Fun{% endblock %}
+{% block content %}
+
+<style>
+    /* Page Background */
+    .about-page {
+        background: linear-gradient(135deg, #f8f9fa 0%, #eaf7ec 100%);
+        min-height: 100vh;
+    }
+
+    /* Hero Section */
+    .about-hero {
+        background: linear-gradient(135deg, #0a3a2e 0%, #1a5f4a 50%, #2d6a4f 100%);
+        color: white;
+        padding: 100px 20px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 50%, rgba(45, 106, 79, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 50%, rgba(137, 201, 151, 0.2) 0%, transparent 50%);
+        z-index: 1;
+    }
+
+    .about-hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 800px;
+        margin: 0 auto;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .about-hero h1 {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        font-weight: 900;
+        margin-bottom: 1rem;
+        background: linear-gradient(to right, #ffffff 0%, #e0f7e0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .about-hero-subtitle {
+        font-size: 1.3rem;
+        color: #c8e6c8;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Section Styling */
+    .section {
+        padding: 80px 20px;
+        position: relative;
+    }
+
+    .section h2 {
+        font-size: clamp(2rem, 6vw, 3rem);
+        font-weight: 800;
+        color: var(--eco-green);
+        margin-bottom: 3rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .section-icon {
+        font-size: 2.5rem;
+    }
+
+    /* Mission Section */
+    .mission-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .mission-content h3 {
+        font-size: 1.8rem;
+        color: #333;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+    }
+
+    .mission-text {
+        font-size: 1.05rem;
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+    }
+
+    .mission-visual {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(45, 106, 79, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+    }
+
+    .mission-visual i {
+        font-size: 8rem;
+        color: var(--eco-green);
+        opacity: 0.8;
+    }
+
+    /* Values Grid */
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .value-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(45, 106, 79, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        border-top: 4px solid var(--eco-green);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .value-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(45, 106, 79, 0.05) 50%, transparent 100%);
+        transition: left 0.5s ease;
+        z-index: 0;
+    }
+
+    .value-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(45, 106, 79, 0.15);
+        border-color: rgba(45, 106, 79, 0.2);
+    }
+
+    .value-card:hover::before {
+        left: 100%;
+    }
+
+    .value-card-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .value-icon {
+        font-size: 3rem;
+        color: var(--eco-green);
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+
+    .value-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .value-description {
+        color: #666;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    /* Impact Section */
+    .impact-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(45, 106, 79, 0.08);
+        transition: all 0.3s ease;
+        border: 2px solid rgba(45, 106, 79, 0.1);
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 12px 35px rgba(45, 106, 79, 0.15);
+        transform: translateY(-5px);
+        border-color: var(--eco-green);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--eco-green) 0%, #52b788 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .stat-desc {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 0.75rem;
+    }
+
+    /* Team Section */
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .team-member {
+        background: white;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(45, 106, 79, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-top: 4px solid var(--eco-green);
+    }
+
+    .team-member:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(45, 106, 79, 0.15);
+    }
+
+    .team-avatar {
+        width: 100%;
+        height: 250px;
+        background: linear-gradient(135deg, var(--eco-green) 0%, #52b788 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 6rem;
+        color: white;
+    }
+
+    .team-info {
+        padding: 2rem;
+    }
+
+    .team-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .team-role {
+        color: var(--eco-green);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .team-bio {
+        color: #666;
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, var(--eco-green) 0%, #52b788 100%);
+        color: white;
+        padding: 80px 20px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 2;
+        max-width: 700px;
+        margin: 0 auto;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-description {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        line-height: 1.6;
+    }
+
+    .cta-btn {
+        background: white;
+        color: var(--eco-green);
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .cta-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        color: var(--eco-green);
+        text-decoration: none;
+    }
+
+    /* Decorative Elements */
+    .section-decoration {
+        position: absolute;
+        opacity: 0.08;
+        pointer-events: none;
+    }
+
+    .decoration-1 {
+        top: -50px;
+        right: -50px;
+        font-size: 300px;
+        color: var(--eco-green);
+    }
+
+    .decoration-2 {
+        bottom: -50px;
+        left: -50px;
+        font-size: 250px;
+        color: var(--eco-light-green);
+    }
+
+    /* Section Dividers */
+    .section-divider {
+        position: relative;
+        height: 80px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+    }
+
+    .section-divider svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: drop-shadow(0 2px 5px rgba(45, 106, 79, 0.1));
+    }
+
+    /* Wave dividers between sections */
+    .wave-divider-white {
+        position: relative;
+        margin-top: -1px;
+        z-index: 10;
+        width: 100%;
+    }
+
+    .wave-divider-gradient {
+        position: relative;
+        margin-top: -1px;
+        z-index: 10;
+        width: 100%;
+    }
+
+    /* Curved design animation */
+    @keyframes wavePulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    .section-divider svg {
+        animation: wavePulse 4s ease-in-out infinite;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .about-hero {
+            padding: 60px 20px;
+        }
+
+        .about-hero h1 {
+            font-size: 2rem;
+        }
+
+        .section {
+            padding: 50px 20px;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+        }
+
+        .mission-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .mission-visual {
+            min-height: 300px;
+        }
+
+        .mission-visual i {
+            font-size: 5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+
+        .team-avatar {
+            height: 200px;
+            font-size: 4rem;
+        }
+
+        .cta-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="about-hero-content">
+        <h1><i class="bi bi-globe"></i>About EcoVerse</h1>
+        <p class="about-hero-subtitle">
+            Where Interactive Gaming Meets Environmental Education – Transforming how the world learns about sustainability through engaging, impactful experiences.
+        </p>
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="section bg-white">
+    <div class="container position-relative" style="z-index: 2;">
+        <h2><i class="bi bi-target section-icon"></i>Our Mission</h2>
+        
+        <div class="mission-container">
+            <div class="mission-content">
+                <h3>Empowering Environmental Action Through Play</h3>
+                <p class="mission-text">
+                    EcoVerse is dedicated to making environmental education engaging, accessible, and fun for everyone. We believe that the most powerful way to drive sustainable change is through interactive learning that inspires, educates, and entertains.
+                </p>
+                <p class="mission-text">
+                    Our platform combines cutting-edge gamification with rigorous environmental science to create an ecosystem where players don't just learn—they become eco-warriors ready to make a real difference in their communities and globally.
+                </p>
+                <p class="mission-text">
+                    From atmospheric protection to ocean conservation, from sustainable farming to waste management, every game is designed to build knowledge, cultivate environmental consciousness, and inspire actionable change.
+                </p>
+            </div>
+            <div class="mission-visual">
+                <i class="bi bi-tree"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Divider 1 -->
+<svg class="wave-divider-white" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="waveDivider1" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M0,40 Q360,0 720,40 T1440,40 L1440,100 L0,100 Z" fill="url(#waveDivider1)"/>
+    <path d="M0,60 Q360,20 720,60 T1440,60 L1440,100 L0,100 Z" fill="#f8f9fa" opacity="0.4"/>
+</svg>
+
+<!-- Values Section -->
+<section class="section" style="background: linear-gradient(135deg, #f8f9fa 0%, #eaf7ec 100%);">
+    <div class="container position-relative" style="z-index: 2;">
+        <h2><i class="bi bi-star-fill section-icon"></i>Our Core Values</h2>
+        
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-card-content">
+                    <div class="value-icon"><i class="bi bi-lightbulb-fill"></i></div>
+                    <h3 class="value-title">Innovation</h3>
+                    <p class="value-description">
+                        We push the boundaries of educational gaming by combining the latest technology with creative storytelling to make environmental science captivating and memorable.
+                    </p>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-card-content">
+                    <div class="value-icon"><i class="bi bi-heart-fill"></i></div>
+                    <h3 class="value-title">Impact</h3>
+                    <p class="value-description">
+                        Every feature, every game, and every interaction is designed to create measurable environmental impact, transforming digital engagement into real-world action.
+                    </p>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-card-content">
+                    <div class="value-icon"><i class="bi bi-people-fill"></i></div>
+                    <h3 class="value-title">Community</h3>
+                    <p class="value-description">
+                        We foster a global community of eco-warriors who support, inspire, and challenge each other to take meaningful steps toward sustainability.
+                    </p>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-card-content">
+                    <div class="value-icon"><i class="bi bi-shield-check"></i></div>
+                    <h3 class="value-title">Accessibility</h3>
+                    <p class="value-description">
+                        Environmental education should be available to everyone, regardless of age, background, or technical skill. We make learning intuitive and inclusive.
+                    </p>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-card-content">
+                    <div class="value-icon"><i class="bi bi-graph-up"></i></div>
+                    <h3 class="value-title">Evidence-Based</h3>
+                    <p class="value-description">
+                        Our content is grounded in scientific research and developed with environmental experts to ensure accuracy, credibility, and educational value.
+                    </p>
+                </div>
+            </div>
+
+            <div class="value-card">
+                <div class="value-card-content">
+                    <div class="value-icon"><i class="bi bi-star"></i></div>
+                    <h3 class="value-title">Empowerment</h3>
+                    <p class="value-description">
+                        We believe everyone has the power to drive change. EcoVerse empowers individuals to become advocates for environmental sustainability in their own circles.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Divider 2 -->
+<svg class="wave-divider-white" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="waveDivider2" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M0,40 Q360,0 720,40 T1440,40 L1440,100 L0,100 Z" fill="url(#waveDivider2)"/>
+    <path d="M0,60 Q360,20 720,60 T1440,60 L1440,100 L0,100 Z" fill="#ffffff" opacity="0.4"/>
+</svg>
+
+<!-- Impact Section -->
+<section class="section bg-white">
+    <div class="container position-relative" style="z-index: 2;">
+        <h2><i class="bi bi-award section-icon"></i>Our Impact</h2>
+        
+        <div class="impact-stats">
+            <div class="stat-card">
+                <div class="stat-number">50K+</div>
+                <div class="stat-label">Active Players</div>
+                <div class="stat-desc">Engaged environmental learners worldwide</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">7</div>
+                <div class="stat-label">Interactive Games</div>
+                <div class="stat-desc">Each covering unique environmental topics</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">2M+</div>
+                <div class="stat-label">Minutes Played</div>
+                <div class="stat-desc">Hours of meaningful environmental learning</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">15+</div>
+                <div class="stat-label">Topics Covered</div>
+                <div class="stat-desc">From climate to biodiversity conservation</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Divider 3 -->
+<svg class="wave-divider-white" viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="waveDivider3" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2d6a4f;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M0,40 Q360,0 720,40 T1440,40 L1440,100 L0,100 Z" fill="url(#waveDivider3)"/>
+    <path d="M0,60 Q360,20 720,60 T1440,60 L1440,100 L0,100 Z" fill="#2d6a4f" opacity="0.3"/>
+</svg>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="cta-content">
+        <h2 class="cta-title">Ready to Make an Impact?</h2>
+        <p class="cta-description">
+            Join thousands of eco-warriors in the mission to protect our planet through engaging, educational gameplay. Start your EcoVerse journey today!
+        </p>
+        <a href="/accounts/signup" class="cta-btn">
+            <i class="bi bi-play-circle-fill"></i>Start Playing Now
+        </a>
+    </div>
+</section>
+
+{% endblock %}

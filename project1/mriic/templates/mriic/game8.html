@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Care Clinic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .pets-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .pet-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pet-card.drop-zone {
+            border-color: #667eea;
+            background: #e8ebff;
+        }
+
+        .pet-emoji {
+            font-size: 3.5em;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .pet-card.happy .pet-emoji {
+            transform: scale(1.2);
+        }
+
+        .pet-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .pet-issue {
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 40px;
+            font-size: 0.9em;
+        }
+
+        .pet-card.completed {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .pet-card.completed .pet-issue {
+            color: #28a745;
+        }
+
+        .items-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .item {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 15px 25px;
+            cursor: move;
+            font-size: 2.5em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .item.dragging {
+            opacity: 0.5;
+        }
+
+        .item.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .hint {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #856404;
+            font-weight: bold;
+            display: none;
+            font-size: 0.85em;
+        }
+
+        .hint.show {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .final-message {
+            display: none;
+            text-align: center;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            font-size: 2em;
+            font-weight: bold;
+            animation: fadeIn 1s;
+        }
+
+        .final-message.show {
+            display: block;
+        }
+
+        .final-message.game-over {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .timer-warning {
+            color: #ff6b6b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .celebration {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .play-again-btn {
+            background: white;
+            color: #28a745;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .play-again-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🏥 Pet Care Clinic 🏥</h1>
+            <p>Drag the right items to help your pets!</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">⭐ Score: <span id="score">0</span></div>
+            <div class="stat-box">⏱️ Time: <span id="timer">0</span>s</div>
+            <div class="stat-box">🐾 Helped: <span id="helped">0</span>/10</div>
+        </div>
+
+        <div class="pets-container" id="petsContainer"></div>
+
+        <div class="items-container" id="itemsContainer">
+            <div class="item" draggable="true" data-item="food">🍖</div>
+            <div class="item" draggable="true" data-item="water">💧</div>
+            <div class="item" draggable="true" data-item="soap">🧼</div>
+            <div class="item" draggable="true" data-item="bandage">🩹</div>
+        </div>
+
+        <div class="final-message" id="finalMessage">
+            <div class="celebration">🎉✨🎊</div>
+            <div id="finalMessageText"></div>
+            <div class="celebration">🏆💚🐾</div>
+            <button class="play-again-btn" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timer = 20;
+        let timerInterval;
+        let completedPets = 0;
+        const totalPets = 10;
+        const timeLimit = 20;
+        let gameActive = true;
+
+        const animals = [
+            { emoji: '🐕', name: 'Buddy' },
+            { emoji: '🐱', name: 'Whiskers' },
+            { emoji: '🐮', name: 'Bessie' },
+            { emoji: '🐷', name: 'Pinky' },
+            { emoji: '🐴', name: 'Thunder' },
+            { emoji: '🐰', name: 'Fluffy' },
+            { emoji: '🐻', name: 'Bruno' },
+            { emoji: '🐨', name: 'Koby' },
+            { emoji: '🐼', name: 'Panda' },
+            { emoji: '🦁', name: 'Leo' }
+        ];
+
+        const needs = [
+            { type: 'food', emoji: '🍖', description: 'Hungry! Needs food', hint: 'Try the food bowl! 🍖' },
+            { type: 'water', emoji: '💧', description: 'Thirsty! Needs water', hint: 'Try the water bowl! 💧' },
+            { type: 'soap', emoji: '🧼', description: 'Dirty! Needs bath', hint: 'Try the soap! 🧼' },
+            { type: 'bandage', emoji: '🩹', description: 'Injured! Needs bandage', hint: 'Try the bandage! 🩹' }
+        ];
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playCheerfulSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 523.25;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                
+                osc2.frequency.value = 659.25;
+                osc2.type = 'sine';
+                
+                gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.5);
+            }, 100);
+        }
+
+        function initializeGame() {
+            const petsContainer = document.getElementById('petsContainer');
+            petsContainer.innerHTML = '';
+            
+            // Shuffle animals array
+            const shuffledAnimals = [...animals].sort(() => Math.random() - 0.5);
+            
+            // Create pets with random needs
+            shuffledAnimals.forEach((animal, index) => {
+                const randomNeed = needs[Math.floor(Math.random() * needs.length)];
+                
+                const petCard = document.createElement('div');
+                petCard.className = 'pet-card';
+                petCard.dataset.pet = animal.name.toLowerCase();
+                petCard.dataset.need = randomNeed.type;
+                
+                petCard.innerHTML = `
+                    <div class="pet-emoji">${animal.emoji}</div>
+                    <div class="pet-name">${animal.name}</div>
+                    <div class="pet-issue">${randomNeed.description} ${randomNeed.emoji}</div>
+                    <div class="hint">${randomNeed.hint}</div>
+                `;
+                
+                petsContainer.appendChild(petCard);
+            });
+            
+            setupDragAndDrop();
+        }
+
+        function setupDragAndDrop() {
+            const items = document.querySelectorAll('.item');
+            const petCards = document.querySelectorAll('.pet-card');
+
+            items.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    if (!gameActive || item.classList.contains('used')) {
+                        e.preventDefault();
+                        return;
+                    }
+                    e.dataTransfer.setData('text/plain', item.dataset.item);
+                    item.classList.add('dragging');
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    item.classList.remove('dragging');
+                });
+            });
+
+            petCards.forEach(card => {
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (!card.classList.contains('completed')) {
+                        card.classList.add('drop-zone');
+                    }
+                });
+
+                card.addEventListener('dragleave', (e) => {
+                    card.classList.remove('drop-zone');
+                });
+
+                card.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    card.classList.remove('drop-zone');
+
+                    if (!gameActive || card.classList.contains('completed')) return;
+
+                    const itemType = e.dataTransfer.getData('text/plain');
+                    const neededItem = card.dataset.need;
+
+                    if (itemType === neededItem) {
+                        playCheerfulSound();
+                        score += 100;
+                        document.getElementById('score').textContent = score;
+
+                        card.classList.add('completed');
+                        card.classList.add('happy');
+                        
+                        const issue = card.querySelector('.pet-issue');
+                        issue.textContent = '✅ Happy and healthy!';
+
+                        completedPets++;
+                        document.getElementById('helped').textContent = completedPets;
+
+                        if (completedPets === totalPets) {
+                            setTimeout(() => {
+                                clearInterval(timerInterval);
+                                endGame(true);
+                            }, 500);
+                        }
+                    } else {
+                        const hint = card.querySelector('.hint');
+                        hint.classList.add('show');
+                        setTimeout(() => {
+                            hint.classList.remove('show');
+                        }, 2000);
+                    }
+                });
+            });
+        }
+
+        function startTimer() {
+            const timerDisplay = document.getElementById('timer');
+            timerDisplay.textContent = timer;
+            gameActive = true;
+            
+            timerInterval = setInterval(() => {
+                timer--;
+                timerDisplay.textContent = timer;
+                
+                if (timer <= 5) {
+                    timerDisplay.parentElement.classList.add('timer-warning');
+                }
+                
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    gameActive = false;
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            score = 0;
+            timer = timeLimit;
+            completedPets = 0;
+            
+            clearInterval(timerInterval);
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timer;
+            document.getElementById('helped').textContent = completedPets;
+            
+            const finalMessage = document.getElementById('finalMessage');
+            finalMessage.classList.remove('show');
+            finalMessage.classList.remove('game-over');
+            
+            const timerDisplay = document.getElementById('timer');
+            timerDisplay.parentElement.classList.remove('timer-warning');
+            
+            const items = document.querySelectorAll('.item');
+            items.forEach(item => {
+                item.classList.remove('used');
+                item.draggable = true;
+            });
+            
+            initializeGame();
+            startTimer();
+        }
+
+        function endGame(won) {
+            const finalMessage = document.getElementById('finalMessage');
+            const celebration = finalMessage.querySelectorAll('.celebration');
+            const messageText = document.getElementById('finalMessageText');
+            
+            if (won) {
+                finalMessage.classList.remove('game-over');
+                celebration[0].textContent = '🎉✨🎊';
+                celebration[1].textContent = '🏆💚🐾';
+                messageText.textContent = `Amazing work, Dr. Hero! You saved all ${totalPets} pets in just ${timeLimit - timer} seconds! Your quick thinking and caring heart made all the difference! 🌟`;
+            } else {
+                finalMessage.classList.add('game-over');
+                celebration[0].textContent = '⏰💔';
+                celebration[1].textContent = '😢';
+                messageText.textContent = 'Time\'s up! Some pets still need help! Try again!';
+            }
+            
+            finalMessage.classList.add('show');
+        }
+
+        // Initialize game on load
+        initializeGame();
+        startTimer();
+    </script>
+</body>
+</html>

@@ -1,45 +1,338 @@
-<footer class="bg-light text-center text-lg-start mt-auto border-top">
+<footer class="footer-modern mt-auto">
+    <style>
+        .footer-modern {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            color: #e0e0e0;
+            padding: 60px 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--eco-green) 0%, #52b788 50%, var(--eco-green) 100%);
+        }
+        
+        .footer-section {
+            margin-bottom: 2rem;
+        }
+        
+        .footer-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--eco-green);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-brand:hover {
+            transform: translateX(5px);
+        }
+        
+        .footer-description {
+            font-size: 0.95rem;
+            color: #b0b0b0;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .social-link {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(45, 106, 79, 0.1);
+            border-radius: 50%;
+            color: var(--eco-green);
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+        
+        .social-link:hover {
+            background: var(--eco-green);
+            color: white;
+            transform: translateY(-3px) scale(1.1);
+            border-color: #52b788;
+            box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3);
+        }
+        
+        .footer-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .footer-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--eco-green);
+            border-radius: 2px;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .footer-links a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--eco-green);
+            transition: width 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--eco-green);
+            padding-left: 0.5rem;
+        }
+        
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+        
+        .newsletter-section {
+            background: rgba(45, 106, 79, 0.08);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(45, 106, 79, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .newsletter-section:hover {
+            background: rgba(45, 106, 79, 0.12);
+            border-color: rgba(45, 106, 79, 0.4);
+        }
+        
+        .newsletter-input {
+            background: #2a2a2a;
+            border: 2px solid #3a3a3a;
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .newsletter-input::placeholder {
+            color: #888;
+        }
+        
+        .newsletter-input:focus {
+            outline: none;
+            background: #323232;
+            border-color: var(--eco-green);
+            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+        }
+        
+        .newsletter-btn {
+            background: linear-gradient(135deg, var(--eco-green) 0%, #52b788 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+        
+        .newsletter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3);
+        }
+        
+        .newsletter-btn:active {
+            transform: translateY(0);
+        }
+        
+        .footer-divider {
+            margin: 2.5rem 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #3a3a3a, transparent);
+        }
+        
+        .footer-bottom {
+            padding: 2rem 0;
+            border-top: 1px solid rgba(45, 106, 79, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .footer-copyright {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .footer-bottom-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-bottom-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-bottom-links a:hover {
+            color: var(--eco-green);
+        }
+        
+        @media (max-width: 768px) {
+            .footer-modern {
+                padding: 40px 20px 0;
+            }
+            
+            .footer-section {
+                margin-bottom: 1.5rem;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-bottom-links {
+                justify-content: center;
+            }
+            
+            .newsletter-section {
+                padding: 1.5rem;
+            }
+            
+            .newsletter-input {
+                width: 100%;
+                margin-bottom: 0.75rem;
+            }
+        }
+    </style>
+    
     <div class="container">
-        <div class="row py-4">
-            <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
-                <h5 class="text-success fw-bold mb-3">EcoVerse</h5>
-                <p class="text-muted">Building a sustainable future through interactive education and environmental awareness.</p>
-                <div class="d-flex justify-content-start mb-3">
-                    <a href="#" class="me-3 text-dark"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="me-3 text-dark"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="me-3 text-dark"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="text-dark"><i class="bi bi-linkedin"></i></a>
+        <div class="row">
+            <!-- Brand Section -->
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <i class="bi bi-leaf-fill"></i>EcoVerse
+                    </div>
+                    <p class="footer-description">
+                        Building a sustainable future through interactive education and environmental awareness. Join thousands of eco-warriors making a difference.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link" title="Twitter"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="social-link" title="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-link" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
-                <h5 class="fw-bold mb-3">Company</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">About Us</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Our Team</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Careers</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Contact</a></li>
-                </ul>
+            
+            <!-- Company Links -->
+            <div class="col-lg-2 col-md-6">
+                <div class="footer-section">
+                    <h5 class="footer-title">Company</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>About Us</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Our Team</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Careers</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Contact</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Press</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
-                <h5 class="fw-bold mb-3">Resources</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Blog</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Research</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Partners</a></li>
-                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Learning</a></li>
-                </ul>
+            
+            <!-- Resources Links -->
+            <div class="col-lg-2 col-md-6">
+                <div class="footer-section">
+                    <h5 class="footer-title">Resources</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Blog</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Research</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Partners</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Learning</a></li>
+                        <li><a href="#"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>Documentation</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
-                <h5 class="fw-bold mb-3">Newsletter</h5>
-                <p class="text-muted">Subscribe to stay updated with our latest news and events.</p>
-                <div class="input-group mb-3">
-                    <input type="email" class="form-control" placeholder="Your email" aria-label="Your email">
-                    <button class="btn btn-success" type="button">Subscribe</button>
+            
+            <!-- Newsletter -->
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-section">
+                    <h5 class="footer-title">Stay Updated</h5>
+                    <div class="newsletter-section">
+                        <p style="color: #b0b0b0; font-size: 0.95rem; margin-bottom: 1rem;">Subscribe to receive our latest news, updates, and environmental insights.</p>
+                        <form class="d-flex gap-2" style="margin-bottom: 1rem;">
+                            <input type="email" class="newsletter-input" placeholder="Your email address" required>
+                            <button type="submit" class="newsletter-btn">
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </form>
+                        <p style="color: #666; font-size: 0.85rem;">We respect your privacy. Unsubscribe at any time.</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="text-center p-3" style="background-color: #eaf7ec;">
-        © 2025 EcoVerse. All rights reserved.
+        
+        <div class="footer-divider"></div>
+        
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 EcoVerse. All rights reserved.</p>
+            <ul class="footer-bottom-links">
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Cookie Policy</a></li>
+                <li><a href="#">Accessibility</a></li>
+            </ul>
+        </div>
     </div>
 </footer>
